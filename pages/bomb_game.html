@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;overflow-x:hidden;user-select:none}
+#app{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:16px}
+.screen{display:none;flex-direction:column;align-items:center;width:100%;max-width:640px}
+.screen.active{display:flex}
+#startScreen{gap:24px;padding-top:40px}
+.game-title{font-size:32px;font-weight:700;color:#f0a500;letter-spacing:2px;text-align:center}
+.game-subtitle{font-size:14px;color:#8b949e;text-align:center}
+.start-btn{padding:14px 48px;font-size:18px;font-weight:700;background:#f0a500;color:#0d1117;border:none;border-radius:8px;cursor:pointer;letter-spacing:1px}
+#hud{display:none;width:100%;max-width:640px;justify-content:space-between;align-items:center;padding:8px 16px;background:#161b22;border:1px solid #30363d;border-radius:8px;margin-bottom:12px}
+#hud.visible{display:flex}
+.hud-item{text-align:center}
+.hud-label{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:1px}
+.hud-val{font-size:20px;font-weight:700;color:#f0a500}
+#levelBanner{width:100%;max-width:640px;text-align:center;padding:8px;background:#1f2937;border:1px solid #374151;border-radius:8px;margin-bottom:12px;display:none}
+#levelBanner.visible{display:block}
+.level-name{font-size:16px;font-weight:700;color:#60a5fa}
+.level-diff{font-size:12px;color:#9ca3af;margin-top:2px}
+#gameScreen{gap:16px}
+.bomb-area{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;width:100%}
+#bombWrap{position:relative;display:flex;align-items:center;justify-content:center;width:160px;height:160px}
+#bombSvg{width:160px;height:160px}
+.q-box{width:100%;background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;text-align:center}
+.q-label{font-size:12px;color:#8b949e;margin-bottom:8px;letter-spacing:1px}
+.q-text{font-size:24px;font-weight:700;color:#e6edf3}
+.q-prog{font-size:12px;color:#8b949e;margin-top:6px}
+.ans-row{display:flex;gap:8px;width:100%}
+#ansInput{flex:1;padding:12px 16px;font-size:20px;background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e6edf3;text-align:center;transition:border-color .2s}
+#ansInput:focus{outline:none;border-color:#f0a500}
+#submitBtn{padding:12px 24px;font-size:16px;font-weight:700;background:#238636;color:#fff;border:none;border-radius:8px;cursor:pointer}
+#hintBtn{padding:8px 16px;font-size:13px;background:#21262d;color:#8b949e;border:1px solid #30363d;border-radius:8px;cursor:pointer}
+.hint-box{width:100%;background:#1c2128;border:1px solid #f0a50066;border-radius:8px;padding:12px 16px;font-size:14px;color:#f0a500;display:none}
+.hint-box.show{display:block}
+.sol-box{width:100%;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:14px 16px;font-size:14px;color:#c9d1d9;display:none;line-height:1.7}
+.sol-box.show{display:block}
+.sol-title{font-weight:700;color:#58a6ff;margin-bottom:6px}
+#resultFlash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:60px;font-weight:900;pointer-events:none;opacity:0;z-index:999;transition:opacity .3s}
+#summaryScreen{gap:20px;padding:20px 0}
+.summary-title{font-size:26px;font-weight:700;color:#f0a500}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;width:100%}
+.s-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px;text-align:center}
+.s-card-label{font-size:11px;color:#8b949e;margin-bottom:4px}
+.s-card-val{font-size:24px;font-weight:700;color:#f0a500}
+.s-comment{font-size:18px;color:#e6edf3;text-align:center}
+.s-btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.s-btn{padding:12px 28px;font-size:15px;font-weight:700;border:none;border-radius:8px;cursor:pointer}
+.s-btn.next{background:#238636;color:#fff}
+.s-btn.retry{background:#21262d;color:#e6edf3;border:1px solid #30363d}
+#endScreen{gap:24px;padding:40px 0;text-align:center}
+.end-title{font-size:36px;font-weight:900;color:#f0a500}
+.grade-badge{font-size:80px;font-weight:900;line-height:1}
+.end-score{font-size:28px;font-weight:700}
+.end-breakdown{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;width:100%;text-align:left}
+.eb-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #21262d;font-size:14px}
+.eb-row:last-child{border-bottom:none;font-weight:700;font-size:16px;color:#f0a500}
+#streakToast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#f0a500;color:#0d1117;padding:8px 24px;border-radius:20px;font-weight:700;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:998}
+#comboBadge{font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;background:#f0a50022;color:#f0a500;border:1px solid #f0a50066;min-height:28px;text-align:center}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+@keyframes bombShake{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+.bomb-shaking{animation:bombShake .3s infinite}
+.page-shake{animation:shake .5s}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="hud">
+  <div class="hud-item"><div class="hud-label">分數</div><div class="hud-val" id="hudScore">0</div></div>
+  <div class="hud-item"><div class="hud-label">關卡</div><div class="hud-val" id="hudLevel">1/3</div></div>
+  <div class="hud-item"><div class="hud-label">連續答對</div><div class="hud-val" id="hudStreak">0</div></div>
+  <div class="hud-item"><div class="hud-label">爆炸</div><div class="hud-val" id="hudExplosions">0</div></div>
+</div>
+
+<div id="levelBanner">
+  <div class="level-name" id="bannerName"></div>
+  <div class="level-diff" id="bannerDiff"></div>
+</div>
+
+<div id="startScreen" class="screen active">
+  <div class="game-title">💣 炸彈拆除闖關</div>
+  <div class="game-subtitle">解開比例方程式，解除炸彈！</div>
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;width:100%;font-size:14px;color:#8b949e;line-height:1.8">
+    <div style="color:#f0a500;font-weight:700;margin-bottom:8px">📋 遊戲規則</div>
+    <div>• 共 3 關，每關 4 題，限時作答</div>
+    <div>• 答對得 100 分 + 剩餘秒數 × 10 分</div>
+    <div>• 連對 2 題 ×1.5 倍｜連對 3+ 題 ×2 倍</div>
+    <div>• 使用提示 -50 分，答錯炸彈爆炸！</div>
+    <div>• 最終評等：S / A / B / C</div>
+  </div>
+  <button class="start-btn" id="startBtn">開始遊戲 🚀</button>
+</div>
+
+<div id="gameScreen" class="screen">
+  <div class="bomb-area">
+    <div id="comboBadge"></div>
+    <div id="bombWrap">
+      <svg id="bombSvg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bg1" cx="35%" cy="30%"><stop offset="0%" stop-color="#555"/><stop offset="100%" stop-color="#111"/></radialGradient>
+          <radialGradient id="bg2" cx="35%" cy="30%"><stop offset="0%" stop-color="#aa2222"/><stop offset="100%" stop-color="#330000"/></radialGradient>
+          <radialGradient id="bg3" cx="35%" cy="30%"><stop offset="0%" stop-color="#1a5c2a"/><stop offset="100%" stop-color="#0a2210"/></radialGradient>
+        </defs>
+        <path id="fuseWire" d="M90 42 Q110 20 120 15" stroke="#a0522d" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle id="fuseSpark" cx="120" cy="15" r="5" fill="#ffcc00"/>
+        <circle id="bombBody" cx="80" cy="95" r="55" fill="url(#bg1)"/>
+        <ellipse cx="62" cy="72" rx="14" ry="9" fill="rgba(255,255,255,0.12)" transform="rotate(-20,62,72)"/>
+        <rect x="30" y="88" width="100" height="12" rx="4" fill="rgba(0,0,0,0.35)"/>
+        <text id="bombTimerTxt" x="80" y="105" text-anchor="middle" font-size="34" font-weight="900" fill="#fff" font-family="monospace">15</text>
+        <g id="defuseGroup" opacity="0">
+          <circle cx="80" cy="95" r="55" fill="#1a5c2a"/>
+          <text x="80" y="88" text-anchor="middle" font-size="28" fill="#4ade80">✓</text>
+          <text x="80" y="115" text-anchor="middle" font-size="14" fill="#4ade80" font-weight="700">解除！</text>
+        </g>
+        <g id="explodeGroup" opacity="0">
+          <polygon points="80,30 95,65 130,55 105,80 125,115 88,100 80,140 72,100 35,115 55,80 30,55 65,65" fill="#ff6600"/>
+          <polygon points="80,50 90,72 112,66 96,82 108,105 84,93 80,120 76,93 52,105 64,82 48,66 70,72" fill="#ffcc00"/>
+          <circle cx="80" cy="85" r="20" fill="#fff" opacity="0.7"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="q-box">
+    <div class="q-label">解方程式，找出 x 的值</div>
+    <div class="q-text" id="qText">x : 5 = 12 : 15</div>
+    <div class="q-prog" id="qProg">第 1 關　第 1/4 題</div>
+  </div>
+  <div class="ans-row">
+    <input type="text" id="ansInput" placeholder="輸入答案（可輸入分數如 1/3）" autocomplete="off"/>
+    <button id="submitBtn">確認</button>
+  </div>
+  <button id="hintBtn">💡 提示（-50分）</button>
+  <div class="hint-box" id="hintBox"></div>
+  <div class="sol-box" id="solBox">
+    <div class="sol-title">📖 解題步驟</div>
+    <div id="solContent"></div>
+  </div>
+</div>
+
+<div id="summaryScreen" class="screen">
+  <div class="summary-title" id="sumTitle">第 1 關結算</div>
+  <div class="summary-grid">
+    <div class="s-card"><div class="s-card-label">本關得分</div><div class="s-card-val" id="sumScore">0</div></div>
+    <div class="s-card"><div class="s-card-label">答對題數</div><div class="s-card-val" id="sumCorrect">0/4</div></div>
+    <div class="s-card"><div class="s-card-label">爆炸次數</div><div class="s-card-val" id="sumExplosions">0</div></div>
+  </div>
+  <div class="s-comment" id="sumComment"></div>
+  <div class="s-btn-row">
+    <button class="s-btn retry" id="retryBtn">🔄 重試本關</button>
+    <button class="s-btn next" id="nextLevelBtn">繼續下一關 ▶</button>
+  </div>
+</div>
+
+<div id="endScreen" class="screen">
+  <div class="end-title">🎉 任務完成！</div>
+  <div class="grade-badge" id="gradeBadge">S</div>
+  <div class="end-score">總分：<span id="endScore" style="color:#f0a500">0</span></div>
+  <div class="end-breakdown" id="endBreakdown"></div>
+  <button class="start-btn" id="restartBtn">再玩一次 🔁</button>
+</div>
+
+</div>
+
+<div id="resultFlash"></div>
+<div id="streakToast"></div>
+
+<script>
+var POOL_L1 = [
+  {q:"x : 5 = 12 : 15",  ans:[4,"4"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 15 = 5 × 12<br>15x = 60<br>x = <b>4</b>"},
+  {q:"2 : 3 = 10 : x",   ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"2 × x = 3 × 10<br>2x = 30<br>x = <b>15</b>"},
+  {q:"x : 4 = 9 : 12",   ans:[3,"3"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 12 = 4 × 9<br>12x = 36<br>x = <b>3</b>"},
+  {q:"6 : x = 2 : 5",    ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"6 × 5 = x × 2<br>2x = 30<br>x = <b>15</b>"},
+  {q:"x : 7 = 4 : 2",    ans:[14,"14"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 2 = 7 × 4<br>2x = 28<br>x = <b>14</b>"},
+  {q:"3 : x = 9 : 12",   ans:[4,"4"],   hint:"外項 × 外項 = 內項 × 內項", sol:"3 × 12 = x × 9<br>36 = 9x<br>x = <b>4</b>"},
+  {q:"x : 6 = 5 : 3",    ans:[10,"10"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 3 = 6 × 5<br>3x = 30<br>x = <b>10</b>"},
+  {q:"8 : 4 = x : 3",    ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"8 × 3 = 4 × x<br>4x = 24<br>x = <b>6</b>"},
+  {q:"5 : x = 15 : 9",   ans:[3,"3"],   hint:"外項 × 外項 = 內項 × 內項", sol:"5 × 9 = x × 15<br>15x = 45<br>x = <b>3</b>"},
+  {q:"x : 8 = 3 : 4",    ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 4 = 8 × 3<br>4x = 24<br>x = <b>6</b>"},
+  {q:"4 : x = 2 : 7",    ans:[14,"14"], hint:"外項 × 外項 = 內項 × 內項", sol:"4 × 7 = x × 2<br>2x = 28<br>x = <b>14</b>"},
+  {q:"x : 9 = 2 : 3",    ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 3 = 9 × 2<br>3x = 18<br>x = <b>6</b>"},
+  {q:"10 : 4 = x : 6",   ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"10 × 6 = 4 × x<br>4x = 60<br>x = <b>15</b>"},
+  {q:"x : 3 = 8 : 4",    ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 4 = 3 × 8<br>4x = 24<br>x = <b>6</b>"},
+  {q:"9 : x = 3 : 5",    ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"9 × 5 = x × 3<br>3x = 45<br>x = <b>15</b>"},
+  {q:"x : 10 = 6 : 12",  ans:[5,"5"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 12 = 10 × 6<br>12x = 60<br>x = <b>5</b>"},
+  {q:"7 : x = 14 : 8",   ans:[4,"4"],   hint:"外項 × 外項 = 內項 × 內項", sol:"7 × 8 = x × 14<br>14x = 56<br>x = <b>4</b>"},
+  {q:"x : 5 = 6 : 2",    ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 2 = 5 × 6<br>2x = 30<br>x = <b>15</b>"},
+  {q:"12 : x = 4 : 3",   ans:[9,"9"],   hint:"外項 × 外項 = 內項 × 內項", sol:"12 × 3 = x × 4<br>4x = 36<br>x = <b>9</b>"},
+  {q:"x : 6 = 8 : 12",   ans:[4,"4"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 12 = 6 × 8<br>12x = 48<br>x = <b>4</b>"},
+  {q:"2 : x = 6 : 9",    ans:[3,"3"],   hint:"外項 × 外項 = 內項 × 內項", sol:"2 × 9 = x × 6<br>6x = 18<br>x = <b>3</b>"},
+  {q:"x : 4 = 15 : 12",  ans:[5,"5"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 12 = 4 × 15<br>12x = 60<br>x = <b>5</b>"},
+  {q:"6 : 9 = x : 12",   ans:[8,"8"],   hint:"外項 × 外項 = 內項 × 內項", sol:"6 × 12 = 9 × x<br>9x = 72<br>x = <b>8</b>"},
+  {q:"x : 2 = 9 : 6",    ans:[3,"3"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 6 = 2 × 9<br>6x = 18<br>x = <b>3</b>"},
+  {q:"5 : 3 = x : 9",    ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"5 × 9 = 3 × x<br>3x = 45<br>x = <b>15</b>"},
+  {q:"x : 7 = 6 : 3",    ans:[14,"14"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 3 = 7 × 6<br>3x = 42<br>x = <b>14</b>"},
+  {q:"4 : 6 = x : 9",    ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"4 × 9 = 6 × x<br>6x = 36<br>x = <b>6</b>"},
+  {q:"x : 3 = 20 : 12",  ans:[5,"5"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 12 = 3 × 20<br>12x = 60<br>x = <b>5</b>"},
+  {q:"8 : x = 4 : 6",    ans:[12,"12"], hint:"外項 × 外項 = 內項 × 內項", sol:"8 × 6 = x × 4<br>4x = 48<br>x = <b>12</b>"},
+  {q:"x : 11 = 4 : 2",   ans:[22,"22"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 2 = 11 × 4<br>2x = 44<br>x = <b>22</b>"},
+  {q:"3 : 4 = 9 : x",    ans:[12,"12"], hint:"外項 × 外項 = 內項 × 內項", sol:"3 × x = 4 × 9<br>3x = 36<br>x = <b>12</b>"},
+  {q:"x : 5 = 18 : 15",  ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 15 = 5 × 18<br>15x = 90<br>x = <b>6</b>"},
+  {q:"16 : x = 8 : 3",   ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"16 × 3 = x × 8<br>8x = 48<br>x = <b>6</b>"},
+  {q:"x : 4 = 6 : 3",    ans:[8,"8"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 3 = 4 × 6<br>3x = 24<br>x = <b>8</b>"},
+  {q:"5 : x = 10 : 8",   ans:[4,"4"],   hint:"外項 × 外項 = 內項 × 內項", sol:"5 × 8 = x × 10<br>10x = 40<br>x = <b>4</b>"},
+  {q:"x : 9 = 5 : 3",    ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 3 = 9 × 5<br>3x = 45<br>x = <b>15</b>"},
+  {q:"7 : 14 = x : 6",   ans:[3,"3"],   hint:"外項 × 外項 = 內項 × 內項", sol:"7 × 6 = 14 × x<br>14x = 42<br>x = <b>3</b>"},
+  {q:"x : 8 = 5 : 10",   ans:[4,"4"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 10 = 8 × 5<br>10x = 40<br>x = <b>4</b>"},
+  {q:"6 : x = 18 : 9",   ans:[3,"3"],   hint:"外項 × 外項 = 內項 × 內項", sol:"6 × 9 = x × 18<br>18x = 54<br>x = <b>3</b>"},
+  {q:"x : 6 = 10 : 4",   ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 4 = 6 × 10<br>4x = 60<br>x = <b>15</b>"},
+  {q:"9 : 3 = x : 4",    ans:[12,"12"], hint:"外項 × 外項 = 內項 × 內項", sol:"9 × 4 = 3 × x<br>3x = 36<br>x = <b>12</b>"},
+  {q:"x : 7 = 8 : 4",    ans:[14,"14"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 4 = 7 × 8<br>4x = 56<br>x = <b>14</b>"},
+  {q:"2 : 5 = x : 20",   ans:[8,"8"],   hint:"外項 × 外項 = 內項 × 內項", sol:"2 × 20 = 5 × x<br>5x = 40<br>x = <b>8</b>"},
+  {q:"x : 4 = 12 : 8",   ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 8 = 4 × 12<br>8x = 48<br>x = <b>6</b>"},
+  {q:"15 : x = 5 : 2",   ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"15 × 2 = x × 5<br>5x = 30<br>x = <b>6</b>"},
+  {q:"x : 10 = 9 : 6",   ans:[15,"15"], hint:"外項 × 外項 = 內項 × 內項", sol:"x × 6 = 10 × 9<br>6x = 90<br>x = <b>15</b>"},
+  {q:"4 : x = 16 : 20",  ans:[5,"5"],   hint:"外項 × 外項 = 內項 × 內項", sol:"4 × 20 = x × 16<br>16x = 80<br>x = <b>5</b>"},
+  {q:"x : 3 = 16 : 6",   ans:[8,"8"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 6 = 3 × 16<br>6x = 48<br>x = <b>8</b>"},
+  {q:"10 : x = 5 : 3",   ans:[6,"6"],   hint:"外項 × 外項 = 內項 × 內項", sol:"10 × 3 = x × 5<br>5x = 30<br>x = <b>6</b>"},
+  {q:"x : 12 = 2 : 3",   ans:[8,"8"],   hint:"外項 × 外項 = 內項 × 內項", sol:"x × 3 = 12 × 2<br>3x = 24<br>x = <b>8</b>"}
+];
+
+var POOL_L2 = [
+  {q:"1.2 : 3x = 6 : 5",  ans:["1/3",1/3,0.333,"0.33","0.333"], hint:"外項 × 外項 = 內項 × 內項", sol:"1.2 × 5 = 3x × 6<br>6 = 18x<br>x = <b>1/3</b>"},
+  {q:"3 : 5 = 5 : x",     ans:["25/3",25/3,8.33,"8.333"],        hint:"外項 × 外項 = 內項 × 內項", sol:"3x = 25<br>x = <b>25/3</b>"},
+  {q:"7 : 5 = 3 : x",     ans:["15/7",15/7,2.143,"2.14"],        hint:"外項 × 外項 = 內項 × 內項", sol:"7x = 15<br>x = <b>15/7</b>"},
+  {q:"(8/3) : x = 2 : 15",ans:[20,"20"],                          hint:"外項 × 外項 = 內項 × 內項", sol:"(8/3)×15 = 2x<br>40 = 2x<br>x = <b>20</b>"},
+  {q:"0.5 : x = 3 : 7",   ans:["7/6",7/6,1.167,"1.17","1.166"], hint:"外項 × 外項 = 內項 × 內項", sol:"0.5×7 = 3x<br>3x = 3.5<br>x = <b>7/6</b>"},
+  {q:"2 : 3 = x : 5",     ans:["10/3",10/3,3.333,"3.33"],        hint:"外項 × 外項 = 內項 × 內項", sol:"2×5 = 3x<br>3x = 10<br>x = <b>10/3</b>"},
+  {q:"x : 4 = 3 : 7",     ans:["12/7",12/7,1.714,"1.71"],        hint:"外項 × 外項 = 內項 × 內項", sol:"7x = 12<br>x = <b>12/7</b>"},
+  {q:"5 : x = 8 : 3",     ans:["15/8",15/8,1.875,"1.88"],        hint:"外項 × 外項 = 內項 × 內項", sol:"5×3 = 8x<br>8x = 15<br>x = <b>15/8</b>"},
+  {q:"0.6 : x = 4 : 5",   ans:[0.75,"0.75","3/4"],               hint:"外項 × 外項 = 內項 × 內項", sol:"0.6×5 = 4x<br>4x = 3<br>x = <b>0.75</b>"},
+  {q:"x : 6 = 5 : 8",     ans:["15/4",15/4,3.75,"3.75"],         hint:"外項 × 外項 = 內項 × 內項", sol:"8x = 30<br>x = <b>15/4</b>"},
+  {q:"1.5 : x = 9 : 4",   ans:["2/3",2/3,0.667,"0.67"],          hint:"外項 × 外項 = 內項 × 內項", sol:"1.5×4 = 9x<br>6 = 9x<br>x = <b>2/3</b>"},
+  {q:"4 : 7 = x : 3",     ans:["12/7",12/7,1.714,"1.71"],        hint:"外項 × 外項 = 內項 × 內項", sol:"4×3 = 7x<br>7x = 12<br>x = <b>12/7</b>"},
+  {q:"x : 5 = 2 : 6",     ans:["5/3",5/3,1.667,"1.67"],          hint:"外項 × 外項 = 內項 × 內項", sol:"6x = 10<br>x = <b>5/3</b>"},
+  {q:"9 : x = 6 : 5",     ans:[7.5,"7.5","15/2"],                hint:"外項 × 外項 = 內項 × 內項", sol:"9×5 = 6x<br>6x = 45<br>x = <b>7.5</b>"},
+  {q:"x : 3 = 4 : 9",     ans:["4/3",4/3,1.333,"1.33"],          hint:"外項 × 外項 = 內項 × 內項", sol:"9x = 12<br>x = <b>4/3</b>"},
+  {q:"2.4 : x = 6 : 5",   ans:[2,"2"],                            hint:"外項 × 外項 = 內項 × 內項", sol:"2.4×5 = 6x<br>12 = 6x<br>x = <b>2</b>"},
+  {q:"x : 8 = 3 : 5",     ans:["24/5",24/5,4.8,"4.8"],           hint:"外項 × 外項 = 內項 × 內項", sol:"5x = 24<br>x = <b>24/5</b>"},
+  {q:"7 : 3 = x : 6",     ans:[14,"14"],                          hint:"外項 × 外項 = 內項 × 內項", sol:"7×6 = 3x<br>3x = 42<br>x = <b>14</b>"},
+  {q:"x : 4 = 7 : 6",     ans:["14/3",14/3,4.667,"4.67"],        hint:"外項 × 外項 = 內項 × 內項", sol:"6x = 28<br>x = <b>14/3</b>"},
+  {q:"1.8 : x = 3 : 5",   ans:[3,"3"],                            hint:"外項 × 外項 = 內項 × 內項", sol:"1.8×5 = 3x<br>9 = 3x<br>x = <b>3</b>"}
+];
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var LEVELS = [
+  {name:"第一關：基本型", diff:"整數答案，隨機 10 題", time:15, pool: POOL_L1, pick: 10},
+  {name:"第二關：進階型", diff:"含小數、分數，隨機 5 題", time:20, pool: POOL_L2, pick: 5}
+];
+
+var state = {};
+var timerInterval = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  state = {
+    level: 0, qIdx: 0, totalScore: 0,
+    streak: 0, explosions: 0,
+    levelScores: [0,0,0],
+    levelExplosionsArr: [0,0,0],
+    levelScore: 0, levelExplosions: 0, levelCorrect: 0,
+    hintUsed: false, answering: false, timeLeft: 0
+  };
+  document.getElementById('hud').classList.add('visible');
+  startLevel();
+}
+
+function startLevel() {
+  state.qIdx = 0;
+  state.levelScore = 0;
+  state.levelExplosions = 0;
+  state.levelCorrect = 0;
+  var lvl = LEVELS[state.level];
+  lvl.questions = shuffle(lvl.pool).slice(0, lvl.pick);
+  state.questions = lvl.questions;
+  document.getElementById('bannerName').textContent = lvl.name;
+  document.getElementById('bannerDiff').textContent = lvl.diff;
+  document.getElementById('levelBanner').classList.add('visible');
+  updateHUD();
+  showScreen('gameScreen');
+  startQuestion();
+}
+
+function startQuestion() {
+  var lvl = LEVELS[state.level];
+  var q = state.questions[state.qIdx];
+  state.hintUsed = false;
+  state.timeLeft = lvl.time;
+  state.answering = true;
+
+  document.getElementById('qText').textContent = q.q;
+  var qTotal = state.questions.length;
+  document.getElementById('qProg').textContent = '第 ' + (state.level+1) + ' 關　第 ' + (state.qIdx+1) + '/' + qTotal + ' 題';
+  document.getElementById('ansInput').value = '';
+  document.getElementById('ansInput').disabled = false;
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('hintBtn').disabled = false;
+  document.getElementById('hintBtn').style.display = 'block';
+  document.getElementById('hintBox').classList.remove('show');
+  document.getElementById('solBox').classList.remove('show');
+  document.getElementById('ansInput').focus();
+
+  resetBomb();
+  updateComboBadge();
+  document.getElementById('bombTimerTxt').textContent = state.timeLeft;
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    if (!state.answering) return;
+    state.timeLeft--;
+    document.getElementById('bombTimerTxt').textContent = state.timeLeft;
+    if (state.timeLeft <= 5) {
+      document.getElementById('bombSvg').classList.add('bomb-shaking');
+      document.getElementById('bombBody').setAttribute('fill','url(#bg2)');
+      document.getElementById('bombTimerTxt').setAttribute('fill','#ff4444');
+    }
+    if (state.timeLeft <= 0) {
+      clearInterval(timerInterval);
+      state.answering = false;
+      doExplosion();
+      setTimeout(function(){ showSolution(); }, 900);
+    }
+  }, 1000);
+}
+
+function resetBomb() {
+  document.getElementById('bombSvg').classList.remove('bomb-shaking');
+  document.getElementById('bombBody').setAttribute('fill','url(#bg1)');
+  document.getElementById('bombTimerTxt').setAttribute('fill','#fff');
+  document.getElementById('bombTimerTxt').style.display = '';
+  document.getElementById('fuseWire').style.display = '';
+  document.getElementById('fuseSpark').style.display = '';
+  document.getElementById('defuseGroup').setAttribute('opacity','0');
+  document.getElementById('explodeGroup').setAttribute('opacity','0');
+}
+
+function defuseBomb() {
+  document.getElementById('bombSvg').classList.remove('bomb-shaking');
+  document.getElementById('defuseGroup').setAttribute('opacity','1');
+  document.getElementById('bombBody').setAttribute('fill','url(#bg3)');
+  document.getElementById('bombTimerTxt').style.display = 'none';
+  document.getElementById('fuseWire').style.display = 'none';
+  document.getElementById('fuseSpark').style.display = 'none';
+  flashResult('✅','#00cc44');
+}
+
+function doExplosion() {
+  document.getElementById('bombSvg').classList.remove('bomb-shaking');
+  document.getElementById('explodeGroup').setAttribute('opacity','1');
+  document.getElementById('bombTimerTxt').style.display = 'none';
+  document.getElementById('fuseWire').style.display = 'none';
+  document.getElementById('fuseSpark').style.display = 'none';
+  flashResult('💥','#ff3300');
+  document.getElementById('app').classList.add('page-shake');
+  document.body.style.backgroundColor = '#330000';
+  setTimeout(function(){
+    document.getElementById('app').classList.remove('page-shake');
+    document.body.style.backgroundColor = '#0d1117';
+  }, 500);
+  state.streak = 0;
+  state.explosions++;
+  state.levelExplosions++;
+  updateHUD();
+}
+
+function flashResult(emoji, color) {
+  var el = document.getElementById('resultFlash');
+  el.textContent = emoji;
+  el.style.color = color;
+  el.style.opacity = '1';
+  setTimeout(function(){ el.style.opacity = '0'; }, 700);
+}
+
+function submitAnswer() {
+  if (!state.answering) return;
+  var raw = document.getElementById('ansInput').value.trim();
+  if (!raw) return;
+  var q = LEVELS[state.level].questions[state.qIdx];
+  var correct = checkAnswer(raw, state.questions[state.qIdx].ans);
+
+  state.answering = false;
+  clearInterval(timerInterval);
+  document.getElementById('ansInput').disabled = true;
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('hintBtn').disabled = true;
+
+  if (correct) {
+    var base = 100;
+    var timeBonus = state.timeLeft * 10;
+    var mult = state.streak >= 3 ? 2 : state.streak === 2 ? 1.5 : 1;
+    var pts = Math.round((base + timeBonus) * mult);
+    if (state.hintUsed) pts = Math.max(0, pts - 50);
+    state.totalScore += pts;
+    state.levelScore += pts;
+    state.streak++;
+    state.levelCorrect++;
+    updateHUD();
+    defuseBomb();
+    updateComboBadge();
+    if (state.streak >= 2) showStreakToast();
+    setTimeout(function(){ nextQuestion(); }, 1200);
+  } else {
+    doExplosion();
+    showSolution();
+  }
+}
+
+function checkAnswer(raw, answers) {
+  var clean = raw.replace(/\s/g,'');
+  for (var i = 0; i < answers.length; i++) {
+    var a = answers[i];
+    if (typeof a === 'string' && clean.toLowerCase() === a.toLowerCase()) return true;
+    if (typeof a === 'number') {
+      var n = parseFloat(clean);
+      if (!isNaN(n) && Math.abs(n - a) < 0.01) return true;
+      var fr = clean.match(/^(-?\d+)\/(-?\d+)$/);
+      if (fr) {
+        var v = parseInt(fr[1]) / parseInt(fr[2]);
+        if (Math.abs(v - a) < 0.001) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function showSolution() {
+  var q = state.questions[state.qIdx];
+  document.getElementById('solContent').innerHTML = q.sol;
+  document.getElementById('solBox').classList.add('show');
+  document.getElementById('hintBtn').style.display = 'none';
+  setTimeout(function(){ nextQuestion(); }, 2800);
+}
+
+function showHint() {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  document.getElementById('hintBtn').disabled = true;
+  var q = state.questions[state.qIdx];
+  document.getElementById('hintBox').textContent = '提示：' + q.hint;
+  document.getElementById('hintBox').classList.add('show');
+}
+
+function nextQuestion() {
+  state.qIdx++;
+  var qTotal = LEVELS[state.level].questions.length;
+  if (state.qIdx >= qTotal) {
+    endLevel();
+  } else {
+    startQuestion();
+  }
+}
+
+function endLevel() {
+  clearInterval(timerInterval);
+  state.levelScores[state.level] = state.levelScore;
+  state.levelExplosionsArr[state.level] = state.levelExplosions;
+
+  document.getElementById('sumTitle').textContent = '第 ' + (state.level+1) + ' 關結算';
+  document.getElementById('sumScore').textContent = state.levelScore;
+  document.getElementById('sumCorrect').textContent = state.levelCorrect + '/' + state.questions.length;
+  document.getElementById('sumExplosions').textContent = state.levelExplosions;
+  document.getElementById('sumComment').textContent =
+    (state.levelCorrect === state.questions.length && state.levelExplosions === 0) ? '完美拆彈！🎉' : '繼續練習！💪';
+
+  var nextBtn = document.getElementById('nextLevelBtn');
+  if (state.level >= 1) {
+    nextBtn.textContent = '查看最終結果 🏆';
+    nextBtn.onclick = showEndScreen;
+  } else {
+    nextBtn.textContent = '繼續下一關 ▶';
+    nextBtn.onclick = nextLevel;
+  }
+  showScreen('summaryScreen');
+}
+
+function nextLevel() {
+  state.level++;
+  startLevel();
+}
+
+function retryLevel() {
+  state.totalScore -= state.levelScore;
+  state.explosions -= state.levelExplosions;
+  state.streak = 0;
+  updateHUD();
+  startLevel();
+}
+
+function showEndScreen() {
+  showScreen('endScreen');
+  document.getElementById('levelBanner').classList.remove('visible');
+  document.getElementById('hud').classList.remove('visible');
+  var total = state.totalScore;
+  var grade, gColor;
+  if (total >= 2400) { grade = 'S'; gColor = '#f0a500'; }
+  else if (total >= 1800) { grade = 'A'; gColor = '#4ade80'; }
+  else if (total >= 1200) { grade = 'B'; gColor = '#60a5fa'; }
+  else { grade = 'C'; gColor = '#f87171'; }
+  document.getElementById('gradeBadge').textContent = grade;
+  document.getElementById('gradeBadge').style.color = gColor;
+  document.getElementById('endScore').textContent = total;
+  var html = '';
+  LEVELS.forEach(function(l, i) {
+    html += '<div class="eb-row"><span>' + l.name + '</span><span>' + (state.levelScores[i]||0) + ' 分</span></div>';
+  });
+  html += '<div class="eb-row"><span>總分</span><span>' + total + ' 分</span></div>';
+  document.getElementById('endBreakdown').innerHTML = html;
+}
+
+function resetGame() {
+  document.getElementById('levelBanner').classList.remove('visible');
+  document.getElementById('hud').classList.remove('visible');
+  showScreen('startScreen');
+}
+
+function updateHUD() {
+  document.getElementById('hudScore').textContent = state.totalScore || 0;
+  document.getElementById('hudLevel').textContent = (state.level+1) + '/3';
+  document.getElementById('hudStreak').textContent = state.streak || 0;
+  document.getElementById('hudExplosions').textContent = state.explosions || 0;
+}
+
+function updateComboBadge() {
+  var el = document.getElementById('comboBadge');
+  if (state.streak >= 3) el.textContent = '🔥 連對 ' + state.streak + ' 題！× 2 倍得分';
+  else if (state.streak === 2) el.textContent = '⚡ 連對 2 題！× 1.5 倍得分';
+  else el.textContent = '';
+}
+
+function showStreakToast() {
+  var t = document.getElementById('streakToast');
+  t.textContent = state.streak >= 3 ? '🔥 連對 ' + state.streak + ' 題！×2 倍！' : '⚡ 連對！×1.5 倍！';
+  t.style.opacity = '1';
+  setTimeout(function(){ t.style.opacity = '0'; }, 1500);
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('submitBtn').addEventListener('click', submitAnswer);
+document.getElementById('hintBtn').addEventListener('click', showHint);
+document.getElementById('retryBtn').addEventListener('click', retryLevel);
+document.getElementById('ansInput').addEventListener('keydown', function(e){ if(e.key==='Enter') submitAnswer(); });
+</script>
+</body>
+</html>

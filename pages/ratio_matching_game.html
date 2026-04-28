@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>配對連連看</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+#app{width:100%;max-width:580px}
+
+/* INTRO */
+#screen-intro{text-align:center;padding:2rem 1rem}
+#screen-intro h1{font-size:28px;font-weight:700;color:#fff;margin-bottom:.5rem;letter-spacing:.05em}
+#screen-intro p{color:#a0b4cc;font-size:14px;margin-bottom:2rem}
+.stage-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:2rem}
+.stage-card{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;padding:1.25rem 1rem;color:#fff}
+.stage-card .num{font-size:28px;font-weight:700;color:#f5c842;margin-bottom:4px}
+.stage-card h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.stage-card p{font-size:12px;color:#a0b4cc;line-height:1.5}
+.btn-main{display:inline-block;padding:13px 36px;background:linear-gradient(135deg,#f5c842,#f0a500);color:#1a1a2e;font-size:16px;font-weight:700;border:none;border-radius:12px;cursor:pointer;letter-spacing:.04em;transition:transform .1s,box-shadow .1s;box-shadow:0 4px 16px rgba(245,200,66,.35)}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,200,66,.5)}
+.btn-main:active{transform:scale(.97)}
+
+/* GAME */
+#screen-game{display:none}
+.game-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.stage-badge{background:linear-gradient(135deg,#f5c842,#f0a500);color:#1a1a2e;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.05em}
+.score-area{display:flex;gap:14px;align-items:center}
+.score-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:5px 12px;text-align:center}
+.score-box .label{font-size:10px;color:#a0b4cc;font-weight:600;letter-spacing:.06em}
+.score-box .val{font-size:17px;font-weight:700;color:#fff}
+.score-box .val.warn{color:#f87171}
+
+/* timer bar */
+.timer-wrap{margin-bottom:1rem}
+.timer-bar-bg{background:rgba(255,255,255,.1);border-radius:99px;height:8px;overflow:hidden}
+.timer-bar-fg{height:100%;border-radius:99px;background:linear-gradient(90deg,#4ade80,#f5c842);transition:width .5s linear,background .5s}
+.timer-bar-fg.urgent{background:linear-gradient(90deg,#f87171,#ef4444)}
+
+/* board */
+#board{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.col-label{font-size:11px;font-weight:700;color:#a0b4cc;letter-spacing:.1em;text-align:center;margin-bottom:6px}
+.card-col{display:flex;flex-direction:column;gap:7px}
+.card{padding:15px 8px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);font-size:17px;font-weight:700;text-align:center;cursor:pointer;transition:all .15s;user-select:none;color:#fff;letter-spacing:.03em}
+.card:hover:not(.locked):not(.error){border-color:#60a5fa;background:rgba(96,165,250,.2);color:#93c5fd;transform:scale(1.03)}
+.card.selected{border-color:#f5c842;background:rgba(245,200,66,.18);color:#fde68a;transform:scale(1.05);box-shadow:0 0 12px rgba(245,200,66,.3)}
+.card.locked{border-color:#4ade80;background:rgba(74,222,128,.15);color:#86efac;cursor:default}
+.card.error{border-color:#f87171;background:rgba(248,113,113,.18);color:#fca5a5;animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* TRANSITION */
+#screen-transition{display:none;text-align:center;padding:2.5rem 1rem}
+#screen-transition .big-check{font-size:56px;margin-bottom:.75rem}
+#screen-transition h2{font-size:22px;font-weight:700;color:#fff;margin-bottom:.5rem}
+#screen-transition .sub{font-size:14px;color:#a0b4cc;margin-bottom:1.5rem}
+.score-summary{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.5rem;text-align:left}
+.score-row{display:flex;justify-content:space-between;font-size:13px;color:#a0b4cc;padding:4px 0}
+.score-row span:last-child{font-weight:700;color:#fff}
+.score-row.total{border-top:1px solid rgba(255,255,255,.12);margin-top:6px;padding-top:10px;font-size:15px}
+.score-row.total span:last-child{color:#f5c842}
+
+/* RESULT */
+#screen-result{display:none;text-align:center;padding:2rem 1rem}
+.trophy{font-size:64px;margin-bottom:.5rem}
+#screen-result h2{font-size:24px;font-weight:700;color:#fff;margin-bottom:.25rem}
+.grade-badge{display:inline-block;font-size:28px;font-weight:700;padding:6px 24px;border-radius:12px;margin:1rem 0;letter-spacing:.08em}
+.grade-S{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#1a1a2e}
+.grade-A{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff}
+.grade-B{background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff}
+.grade-C{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff}
+.grade-D{background:rgba(255,255,255,.15);color:#fff}
+.final-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:1.25rem 0}
+.fscore{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:.9rem .5rem;text-align:center}
+.fscore .fl{font-size:11px;color:#a0b4cc;font-weight:600;letter-spacing:.06em;margin-bottom:4px}
+.fscore .fv{font-size:22px;font-weight:700;color:#fff}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- INTRO -->
+<div id="screen-intro">
+  <h1>⚡ 配對連連看</h1>
+  <p>兩個關卡，挑戰你的比值配對速度！</p>
+  <div class="stage-cards">
+    <div class="stage-card">
+      <div class="num">01</div>
+      <h3>整數關卡</h3>
+      <p>5題整數比<br>限時 60 秒</p>
+    </div>
+    <div class="stage-card">
+      <div class="num">02</div>
+      <h3>進階關卡</h3>
+      <p>5題分數＆小數比<br>限時 90 秒</p>
+    </div>
+  </div>
+  <button class="btn-main" onclick="startStage(1)">開始挑戰</button>
+</div>
+
+<!-- GAME -->
+<div id="screen-game">
+  <div class="game-header">
+    <div class="stage-badge" id="stage-label">第 1 關</div>
+    <div class="score-area">
+      <div class="score-box"><div class="label">配對</div><div class="val" id="g-matched">0/5</div></div>
+      <div class="score-box"><div class="label">錯誤</div><div class="val warn" id="g-errors">0</div></div>
+      <div class="score-box"><div class="label">時間</div><div class="val" id="g-time">60</div></div>
+    </div>
+  </div>
+  <div class="timer-wrap">
+    <div class="timer-bar-bg"><div class="timer-bar-fg" id="timer-bar"></div></div>
+  </div>
+  <div id="board">
+    <div><div class="col-label">左 欄</div><div class="card-col" id="left-col"></div></div>
+    <div><div class="col-label">右 欄</div><div class="card-col" id="right-col"></div></div>
+  </div>
+</div>
+
+<!-- TRANSITION (between stages) -->
+<div id="screen-transition">
+  <div class="big-check">✅</div>
+  <h2>第一關完成！</h2>
+  <div class="sub">準備好迎接進階挑戰了嗎？</div>
+  <div class="score-summary">
+    <div class="score-row"><span>完成時間</span><span id="tr-time">—</span></div>
+    <div class="score-row"><span>時間分數</span><span id="tr-time-pts">—</span></div>
+    <div class="score-row"><span>錯誤扣分</span><span id="tr-err-pts">—</span></div>
+    <div class="score-row total"><span>第一關得分</span><span id="tr-total">—</span></div>
+  </div>
+  <button class="btn-main" onclick="startStage(2)">進入第二關 →</button>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result">
+  <div class="trophy" id="result-trophy">🏆</div>
+  <h2>挑戰完成！</h2>
+  <div class="grade-badge" id="grade-badge">S</div>
+  <div id="grade-label" style="color:#a0b4cc;font-size:14px;margin-bottom:.5rem"></div>
+  <div class="final-scores">
+    <div class="fscore"><div class="fl">第一關</div><div class="fv" id="fs1">—</div></div>
+    <div class="fscore"><div class="fl">第二關</div><div class="fv" id="fs2">—</div></div>
+    <div class="fscore"><div class="fl">總分</div><div class="fv" id="fs-total" style="color:#f5c842">—</div></div>
+  </div>
+  <button class="btn-main" onclick="resetGame()">再玩一次</button>
+</div>
+
+</div>
+<script>
+const POOL_INT=[
+  {l:"2：3",r:"4：6"},{l:"1：2",r:"3：6"},{l:"3：4",r:"6：8"},{l:"5：2",r:"10：4"},
+  {l:"1：3",r:"2：6"},{l:"4：5",r:"8：10"},{l:"3：1",r:"6：2"},{l:"2：5",r:"4：10"},
+  {l:"1：4",r:"3：12"},{l:"3：2",r:"9：6"},{l:"5：10",r:"1：2"},{l:"6：9",r:"2：3"},
+  {l:"8：6",r:"4：3"},{l:"9：12",r:"3：4"},{l:"15：9",r:"5：3"},{l:"12：8",r:"3：2"},
+  {l:"7：14",r:"1：2"},{l:"8：20",r:"2：5"},{l:"9：3",r:"3：1"},{l:"12：4",r:"3：1"},
+  {l:"50：75",r:"2：3"},{l:"24：18",r:"4：3"},{l:"36：24",r:"3：2"},{l:"20：16",r:"5：4"},
+  {l:"10：6",r:"5：3"}
+];
+const POOL_ADV=[
+  {l:"0.2：0.3",r:"2：3"},{l:"0.5：1",r:"1：2"},{l:"0.4：0.6",r:"2：3"},
+  {l:"1.5：2",r:"3：4"},{l:"0.6：0.4",r:"3：2"},{l:"0.3：0.9",r:"1：3"},
+  {l:"2.4：3.2",r:"3：4"},{l:"1.2：0.8",r:"3：2"},{l:"0.1：0.5",r:"1：5"},
+  {l:"0.9：0.3",r:"3：1"},{l:"½：1",r:"1：2"},{l:"⅔：1",r:"2：3"},
+  {l:"¾：1",r:"3：4"},{l:"¼：1",r:"1：4"},{l:"⅖：1",r:"2：5"},{l:"⅗：1",r:"3：5"}
+];
+const FM={"½":.5,"⅔":2/3,"¾":.75,"¼":.25,"⅖":.4,"⅗":.6};
+const TIME_LIMIT=[0,60,90];
+
+function ratio(s){const p=s.split("：");return(FM[p[0]]??parseFloat(p[0]))/(FM[p[1]]??parseFloat(p[1]));}
+function isMatch(a,b){return Math.abs(ratio(a)-ratio(b))<1e-9;}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+let stage,leftCards,rightCards,selL,selR,locked,errors,matched,timeLeft,timerID,stageScores;
+
+function show(id){
+  ["screen-intro","screen-game","screen-transition","screen-result"].forEach(s=>document.getElementById(s).style.display="none");
+  document.getElementById(id).style.display="block";
+}
+
+function resetGame(){stageScores=[0,0];show("screen-intro");}
+
+function startStage(s){
+  stage=s;
+  const pool=s===1?POOL_INT:POOL_ADV;
+  const chosen=shuffle(pool).slice(0,5);
+  leftCards=chosen.map(p=>p.l);
+  rightCards=shuffle(chosen.map(p=>p.r));
+  selL=selR=null;locked=new Set();errors=0;matched=0;
+  timeLeft=TIME_LIMIT[s];
+  document.getElementById("stage-label").textContent="第 "+s+" 關";
+  document.getElementById("g-matched").textContent="0/5";
+  document.getElementById("g-errors").textContent="0";
+  document.getElementById("g-time").textContent=timeLeft;
+  updateBar();
+  show("screen-game");
+  render();
+  clearInterval(timerID);
+  timerID=setInterval(tick,1000);
+}
+
+function tick(){
+  timeLeft--;
+  document.getElementById("g-time").textContent=timeLeft;
+  updateBar();
+  if(timeLeft<=0){clearInterval(timerID);timeOut();}
+}
+
+function updateBar(){
+  const pct=(timeLeft/TIME_LIMIT[stage])*100;
+  const bar=document.getElementById("timer-bar");
+  bar.style.width=pct+"%";
+  if(pct<=30)bar.classList.add("urgent");else bar.classList.remove("urgent");
+}
+
+function timeOut(){
+  // force remaining matched = 0 penalty, end stage
+  endStage();
+}
+
+function calcScore(timeUsed,err,totalTime){
+  const timePts=Math.max(0,Math.round((1-timeUsed/totalTime)*60));
+  const errPts=err*10;
+  return {timePts,errPts,total:Math.max(0,timePts+40-errPts)};
+}
+
+function endStage(){
+  clearInterval(timerID);
+  const timeUsed=TIME_LIMIT[stage]-timeLeft;
+  const {timePts,errPts,total}=calcScore(timeUsed,errors,TIME_LIMIT[stage]);
+  if(!stageScores)stageScores=[0,0];
+  stageScores[stage-1]=total;
+
+  if(stage===1){
+    document.getElementById("tr-time").textContent=timeUsed+"秒";
+    document.getElementById("tr-time-pts").textContent="+"+timePts+" 分";
+    document.getElementById("tr-err-pts").textContent="-"+errPts+" 分";
+    document.getElementById("tr-total").textContent=total+" 分";
+    show("screen-transition");
+  } else {
+    showResult();
+  }
+}
+
+function showResult(){
+  const s1=stageScores[0],s2=stageScores[1],tot=s1+s2;
+  document.getElementById("fs1").textContent=s1+"分";
+  document.getElementById("fs2").textContent=s2+"分";
+  document.getElementById("fs-total").textContent=tot+"分";
+  let grade,label,trophy;
+  if(tot>=160){grade="S";label="完美大師！無懈可擊！";trophy="🏆"}
+  else if(tot>=130){grade="A";label="優秀！表現非常亮眼！";trophy="🥇"}
+  else if(tot>=100){grade="B";label="不錯！繼續保持！";trophy="🥈"}
+  else if(tot>=70){grade="C";label="還可以，多練習會更好！";trophy="🥉"}
+  else{grade="D";label="加油！你可以做得更好！";trophy="💪"}
+  const gb=document.getElementById("grade-badge");
+  gb.textContent=grade; gb.className="grade-badge grade-"+grade;
+  document.getElementById("grade-label").textContent=label;
+  document.getElementById("result-trophy").textContent=trophy;
+  show("screen-result");
+}
+
+function render(){
+  const lc=document.getElementById("left-col"),rc=document.getElementById("right-col");
+  lc.innerHTML="";rc.innerHTML="";
+  leftCards.forEach((t,i)=>{
+    const d=document.createElement("div");d.className="card";d.textContent=t;
+    if(locked.has("l"+i))d.classList.add("locked");
+    else if(selL===i)d.classList.add("selected");
+    d.onclick=()=>clickL(i);lc.appendChild(d);
+  });
+  rightCards.forEach((t,i)=>{
+    const d=document.createElement("div");d.className="card";d.textContent=t;
+    if(locked.has("r"+i))d.classList.add("locked");
+    else if(selR===i)d.classList.add("selected");
+    d.onclick=()=>clickR(i);rc.appendChild(d);
+  });
+}
+
+function clickL(i){if(locked.has("l"+i))return;selL=(selL===i)?null:i;render();if(selL!==null&&selR!==null)check();}
+function clickR(i){if(locked.has("r"+i))return;selR=(selR===i)?null:i;render();if(selL!==null&&selR!==null)check();}
+
+function check(){
+  const li=selL,ri=selR;
+  if(isMatch(leftCards[li],rightCards[ri])){
+    locked.add("l"+li);locked.add("r"+ri);matched++;selL=selR=null;
+    document.getElementById("g-matched").textContent=matched+"/5";
+    render();
+    if(matched===5)setTimeout(endStage,350);
+  } else {
+    errors++;
+    document.getElementById("g-errors").textContent=errors;
+    const lEl=document.getElementById("left-col").children[li];
+    const rEl=document.getElementById("right-col").children[ri];
+    lEl.classList.add("error");rEl.classList.add("error");
+    selL=selR=null;
+    setTimeout(()=>{lEl.classList.remove("error");rEl.classList.remove("error");render();},500);
+  }
+}
+
+stageScores=[0,0];
+</script>
+</body>
+</html>

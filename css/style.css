@@ -1,0 +1,455 @@
+/* CSS Variables for Ghibli Anime Theme */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+:root {
+    --bg-color: #f0fdf4; /* Very light nature green */
+    --card-bg: rgba(255, 255, 255, 0.85); /* Frosty white */
+    --glass-border: rgba(255, 255, 255, 0.8);
+    
+    --primary: #4ade80; /* Leaf Green */
+    --primary-glow: rgba(74, 222, 128, 0.4);
+    
+    --secondary: #60a5fa; /* Sky Blue */
+    --secondary-glow: rgba(96, 165, 250, 0.4);
+    
+    --accent: #fbbf24; /* Sun Yellow */
+    --accent-glow: rgba(251, 191, 36, 0.4);
+    
+    --text-main: #334155; /* Slate 700 */
+    --text-muted: #64748b; /* Slate 500 */
+    
+    --font-sans: 'Nunito', 'Noto Sans TC', sans-serif;
+    --font-heading: 'Noto Sans TC', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+    background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%234ade80" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); /* Subtle math pattern background */
+}
+
+/* --- Background Orbs (Glassmorphism effect underneath) --- */
+.bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    opacity: 0.6;
+    animation: drift 20s infinite alternate ease-in-out;
+}
+
+.orb-1 {
+    width: 500px;
+    height: 500px;
+    background: var(--primary-glow);
+    top: -150px;
+    left: -150px;
+}
+
+.orb-2 {
+    width: 400px;
+    height: 400px;
+    background: var(--secondary-glow);
+    bottom: 10%;
+    right: -100px;
+    animation-delay: -7s;
+}
+
+.orb-3 {
+    width: 300px;
+    height: 300px;
+    background: var(--accent-glow);
+    top: 30%;
+    left: 40%;
+    animation-duration: 25s;
+}
+
+@keyframes drift {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 60px) scale(1.15); }
+}
+
+/* --- Navigation --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 2px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.nav-logo {
+    font-family: var(--font-heading);
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+}
+
+.logo-icon {
+    font-size: 2rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+}
+
+.nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: color 0.3s, transform 0.2s;
+    display: inline-block;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    color: var(--secondary);
+    transform: scale(1.05);
+}
+
+/* --- Hero Section --- */
+.hero-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 80px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 70vh;
+}
+
+.hero-content {
+    flex: 1;
+    max-width: 600px;
+    animation: slideUp 0.8s ease-out forwards;
+}
+
+.badge {
+    display: inline-block;
+    padding: 8px 18px;
+    background: #fff;
+    border: 2px solid var(--primary);
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-bottom: 25px;
+    color: var(--primary);
+    box-shadow: 0 4px 10px rgba(74, 222, 128, 0.2);
+}
+
+.hero-title {
+    font-family: var(--font-heading);
+    font-weight: 900;
+    font-size: 3.8rem;
+    line-height: 1.3;
+    margin-bottom: 25px;
+    color: var(--text-main);
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--text-muted);
+    margin-bottom: 45px;
+    font-weight: 600;
+}
+
+.cta-btn {
+    display: inline-block;
+    padding: 16px 36px;
+    background: linear-gradient(135deg, var(--accent), #f59e0b);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1.2rem;
+    border-radius: 40px;
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 2px solid #fff;
+}
+
+.cta-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 12px 30px rgba(245, 158, 11, 0.5);
+}
+
+/* Floating Hero Images / Cards */
+.hero-image {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    height: 450px;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    border: 2px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 20px 30px;
+    border-radius: 24px;
+    font-weight: 800;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    position: absolute;
+    animation: float 6s infinite ease-in-out;
+    color: var(--text-main);
+}
+
+.card-icon {
+    font-size: 2.2rem;
+}
+
+.floating-card-1 {
+    top: 30px;
+    right: 5%;
+    animation-delay: 0s;
+}
+
+.floating-card-2 {
+    top: 50%;
+    left: 5%;
+    transform: translateY(-50%);
+    animation-delay: -2s;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(96, 165, 250, 0.2));
+}
+
+.floating-card-3 {
+    bottom: 30px;
+    right: 15%;
+    animation-delay: -4s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Main Content / Lessons --- */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 5%;
+}
+
+.section-title {
+    font-family: var(--font-heading);
+    font-size: 2.8rem;
+    margin-bottom: 50px;
+    text-align: center;
+    color: var(--primary);
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+}
+
+.lesson-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 40px;
+}
+
+.lesson-card {
+    background: var(--card-bg);
+    border: 2px solid var(--glass-border);
+    border-radius: 28px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.lesson-card.featured:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 25px 45px rgba(96, 165, 250, 0.2);
+    border-color: var(--secondary);
+}
+
+.card-image {
+    height: 200px;
+    position: relative;
+    background: #e2e8f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.locked-cover {
+    background: #cbd5e1;
+    filter: grayscale(100%);
+}
+
+.status-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 14px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border: 2px solid #fff;
+}
+
+.status-badge.new {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.status-badge.locked {
+    background: #94a3b8;
+    color: #fff;
+}
+
+.card-content {
+    padding: 28px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.tags {
+    margin-bottom: 18px;
+    display: flex;
+    gap: 10px;
+}
+
+.tag {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+.tag-algebra { background: rgba(96, 165, 250, 0.2); color: #3b82f6; }
+.tag-geometry { background: rgba(74, 222, 128, 0.2); color: #22c55e; }
+.tag-interactive { background: rgba(245, 158, 11, 0.2); color: #d97706; }
+.tag-logic { background: rgba(167, 139, 250, 0.2); color: #8b5cf6; }
+
+.card-content h3 {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+    color: var(--text-main);
+}
+
+.card-content p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-bottom: 28px;
+    flex: 1;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 18px;
+    border-top: 2px dashed #cbd5e1;
+}
+
+.difficulty {
+    font-size: 0.95rem;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.btn-text {
+    color: var(--secondary);
+    font-weight: 800;
+    transition: transform 0.3s;
+}
+
+.lesson-card.featured:hover .btn-text {
+    transform: translateX(6px);
+}
+
+.lesson-card.disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* --- Footer --- */
+footer {
+    text-align: center;
+    padding: 50px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .hero-section {
+        flex-direction: column;
+        text-align: center;
+        padding-top: 40px;
+    }
+    
+    .hero-title {
+        font-size: 2.8rem;
+    }
+    
+    .hero-image {
+        margin-top: 50px;
+        width: 100%;
+        height: 350px;
+    }
+    
+    .floating-card-1 { right: 5%; top: 0; }
+    .floating-card-2 { left: 5%; top: 40%; }
+    .floating-card-3 { right: 10%; bottom: 0; }
+    
+    .nav-links {
+        display: none;
+    }
+}
