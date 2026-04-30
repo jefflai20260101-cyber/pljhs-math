@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>密室脫逃 — 比例式解謎</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',sans-serif;background:#0a0a1a;color:#e0e0ff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+#game{width:100%;max-width:680px}
+.room{background:#12122a;border:1.5px solid #3a2a6a;border-radius:16px;padding:24px;position:relative}
+.room-label{font-size:11px;letter-spacing:2px;color:#7a6aaa;text-transform:uppercase;margin-bottom:6px}
+.room-title{font-size:20px;font-weight:600;color:#c0b0ff;margin-bottom:18px}
+.door{background:#0e0e20;border:2px solid #3a2a6a;border-radius:12px;padding:18px;margin-bottom:20px;text-align:center;position:relative;transition:all 0.3s}
+.door.shake{animation:shake 0.4s ease}
+.door.open{border-color:#2a6a3a;background:#0e201a}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.equation{font-size:18px;font-weight:600;color:#e8d8ff;margin-bottom:12px;letter-spacing:1px}
+.locks{display:flex;gap:10px;justify-content:center;margin-top:8px}
+.lock{width:28px;height:28px;background:#2a1a4a;border:1.5px solid #5a3a8a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.4s}
+.lock.unlocked{background:#1a3a2a;border-color:#3a8a5a;transform:scale(1.15)}
+.lock.unlocked::after{content:'✓';color:#5aff8a;font-size:13px}
+.lock:not(.unlocked)::after{content:'🔒';font-size:12px}
+.steps{display:flex;flex-direction:column;gap:14px;margin-bottom:18px}
+.step{background:#10102a;border:1px solid #2a1a5a;border-radius:10px;padding:14px 16px;transition:border-color 0.3s}
+.step.active{border-color:#6a4aaa}
+.step.correct{border-color:#2a6a4a;background:#0e1e18}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.step-num{width:22px;height:22px;border-radius:50%;background:#2a1a5a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#b0a0ee;flex-shrink:0}
+.step-title{font-size:13px;color:#9a8acc;font-weight:500}
+.step-hint-btn{margin-left:auto;font-size:11px;padding:3px 10px;background:transparent;border:1px solid #4a3a7a;color:#8a7acc;border-radius:20px;cursor:pointer;transition:all 0.2s}
+.step-hint-btn:hover{background:#2a1a5a;color:#c0b0ff}
+.step-hint-btn:disabled{opacity:0.3;cursor:default}
+.hint-box{background:#1a1240;border:1px solid #4a3a7a;border-radius:8px;padding:10px 12px;font-size:12px;color:#b0a0dd;margin-bottom:10px;display:none}
+.hint-box.visible{display:block}
+.input-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;color:#c0b0ee;line-height:2}
+.step-input{background:#1a1235;border:1px solid #3a2a6a;border-radius:6px;padding:5px 8px;color:#e0d8ff;font-size:14px;width:72px;text-align:center;outline:none;transition:border-color 0.2s}
+.step-input:focus{border-color:#7a5acc}
+.step-input.correct-input{border-color:#3a8a5a;background:#0e1e18;color:#5aff8a}
+.step-input.wrong-input{border-color:#8a3a3a;background:#200e0e;animation:shake 0.3s}
+.step-input:disabled{opacity:0.6;cursor:default}
+.check-btn{padding:7px 18px;background:#3a2a6a;border:none;border-radius:8px;color:#d0c0ff;font-size:13px;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.check-btn:hover{background:#4a3a8a;transform:scale(1.02)}
+.check-btn:disabled{opacity:0.3;cursor:default}
+.score-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:13px;color:#8a7aaa}
+.score-val{font-size:18px;font-weight:600;color:#c0b0ff}
+.progress{display:flex;gap:6px}
+.prog-dot{width:10px;height:10px;border-radius:50%;background:#2a1a4a;border:1px solid #3a2a6a;transition:all 0.4s}
+.prog-dot.done{background:#4a8a6a;border-color:#5aaa8a}
+.prog-dot.current{background:#6a4aaa;border-color:#8a6acc;box-shadow:0 0 6px #6a4aaa}
+.result-panel{display:none;background:#10102a;border:1.5px solid #3a2a6a;border-radius:12px;padding:20px;margin-top:16px;text-align:center}
+.result-panel.visible{display:block}
+.solution{background:#0e0e20;border:1px solid #2a1a5a;border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px;color:#b0a0dd;text-align:left;line-height:2.2}
+.sol-step{color:#7a6acc;font-weight:500}
+.action-row{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.btn-main{padding:10px 24px;background:#4a3a8a;border:none;border-radius:10px;color:#e0d8ff;font-size:14px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.btn-main:hover{background:#5a4a9a;transform:scale(1.02)}
+.btn-sec{padding:10px 24px;background:transparent;border:1.5px solid #3a2a6a;border-radius:10px;color:#9a8acc;font-size:14px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.btn-sec:hover{border-color:#5a4a9a;color:#c0b0ff}
+.final-screen{display:none;text-align:center;padding:32px 16px}
+.final-screen.visible{display:block}
+.grade{font-size:80px;font-weight:700;color:#c0b0ff;margin:16px 0}
+.final-msg{font-size:16px;color:#9a8acc;margin-bottom:20px}
+.total-score{font-size:28px;color:#e0d8ff;margin-bottom:6px}
+.stars{font-size:32px;margin:8px 0}
+.error-badge{font-size:11px;color:#ff7a7a;margin-left:6px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn 0.4s ease}
+.tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#2a1a5a;color:#9a8acc;margin-left:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<h2 class="sr-only">密室脫逃：比例式解謎遊戲，共四關，每關四步驟（含最終求解）隨機抽題</h2>
+<div id="game">
+  <div id="main-game">
+    <div class="score-bar">
+      <div>
+        <div style="font-size:11px;letter-spacing:1px;color:#5a4a8a;text-transform:uppercase">總分</div>
+        <div class="score-val" id="total-score">0</div>
+      </div>
+      <div class="progress" id="progress-dots"></div>
+      <div style="text-align:right">
+        <div style="font-size:11px;letter-spacing:1px;color:#5a4a8a;text-transform:uppercase">第 <span id="level-num">1</span> 關</div>
+        <div style="font-size:13px;color:#7a6aaa" id="level-source"></div>
+      </div>
+    </div>
+    <div class="room" id="room-card">
+      <div class="room-label" id="room-label"></div>
+      <div class="room-title" id="room-title"></div>
+      <div class="door" id="door">
+        <div class="equation" id="eq-display"></div>
+        <div class="locks" id="locks-display"></div>
+      </div>
+      <div class="steps" id="steps-area"></div>
+      <div class="result-panel" id="result-panel"></div>
+    </div>
+  </div>
+  <div class="final-screen" id="final-screen">
+    <div style="font-size:11px;letter-spacing:2px;color:#5a4a8a;text-transform:uppercase;margin-bottom:8px">密室脫逃完成</div>
+    <div class="stars" id="stars"></div>
+    <div class="grade" id="final-grade"></div>
+    <div class="total-score" id="final-total"></div>
+    <div class="final-msg" id="final-msg"></div>
+    <div style="font-size:13px;color:#5a4a8a;margin-top:12px" id="used-qs"></div>
+    <button class="btn-main" onclick="restartGame()" style="margin-top:16px">再挑戰一次（換新題目）</button>
+  </div>
+</div>
+<script>
+// ── 20 題題庫 ──────────────────────────────────────────────
+// 每題格式：eq顯示文字、s1~s3展開結果（外積=內積、展開括號、移項）、答案x、出處
+// s1: [左係數, 左括號文字, 右係數, 右括號文字]
+// s2: [左x係數, 左常數含符號, 右x係數, 右常數含符號]  (字串)
+// s3: [2x係數, 常數] → ax=b → x
+const BANK = [
+  // 括號含加法
+  {eq:"(x＋1)：4 ＝ (3x＋6)：14", src:"課本 p.96 例2(2)",
+   s1:{l:"14",lp:"x＋1",r:"4",rp:"3x＋6"},
+   s2:{lx:"14",lc:"＋14",rx:"12",rc:"＋24"},
+   s3:{lx:"2",rc:"10"}, x:5},
+  {eq:"(x＋2)：3 ＝ (x＋5)：6", src:"自編 A1",
+   s1:{l:"6",lp:"x＋2",r:"3",rp:"x＋5"},
+   s2:{lx:"6",lc:"＋12",rx:"3",rc:"＋15"},
+   s3:{lx:"3",rc:"3"}, x:1},
+  {eq:"(x＋3)：2 ＝ (2x＋4)：5", src:"自編 A2",
+   s1:{l:"5",lp:"x＋3",r:"2",rp:"2x＋4"},
+   s2:{lx:"5",lc:"＋15",rx:"4",rc:"＋8"},
+   s3:{lx:"1",rc:"－7"}, x:-7},
+  {eq:"(2x＋1)：5 ＝ (3x＋2)：7", src:"自編 A3",
+   s1:{l:"7",lp:"2x＋1",r:"5",rp:"3x＋2"},
+   s2:{lx:"14",lc:"＋7",rx:"15",rc:"＋10"},
+   s3:{lx:"1",rc:"3"}, x:3},
+  {eq:"(x＋4)：3 ＝ (2x＋5)：4", src:"自編 A4",
+   s1:{l:"4",lp:"x＋4",r:"3",rp:"2x＋5"},
+   s2:{lx:"4",lc:"＋16",rx:"6",rc:"＋15"},
+   s3:{lx:"2",rc:"－1"}, x:-0.5},
+  // 括號含減法
+  {eq:"(x－2)：3 ＝ (x＋4)：5", src:"習作 p.29 第4題(3)",
+   s1:{l:"5",lp:"x－2",r:"3",rp:"x＋4"},
+   s2:{lx:"5",lc:"－10",rx:"3",rc:"＋12"},
+   s3:{lx:"2",rc:"22"}, x:11},
+  {eq:"(x－1)：4 ＝ (x＋3)：6", src:"自編 B1",
+   s1:{l:"6",lp:"x－1",r:"4",rp:"x＋3"},
+   s2:{lx:"6",lc:"－6",rx:"4",rc:"＋12"},
+   s3:{lx:"2",rc:"18"}, x:9},
+  {eq:"(x－3)：2 ＝ (x＋1)：4", src:"自編 B2",
+   s1:{l:"4",lp:"x－3",r:"2",rp:"x＋1"},
+   s2:{lx:"4",lc:"－12",rx:"2",rc:"＋2"},
+   s3:{lx:"2",rc:"14"}, x:7},
+  {eq:"(2x－1)：3 ＝ (x＋2)：2", src:"自編 B3",
+   s1:{l:"2",lp:"2x－1",r:"3",rp:"x＋2"},
+   s2:{lx:"4",lc:"－2",rx:"3",rc:"＋6"},
+   s3:{lx:"1",rc:"8"}, x:8},
+  {eq:"(3x－2)：4 ＝ (2x＋1)：3", src:"自編 B4",
+   s1:{l:"3",lp:"3x－2",r:"4",rp:"2x＋1"},
+   s2:{lx:"9",lc:"－6",rx:"8",rc:"＋4"},
+   s3:{lx:"1",rc:"10"}, x:10},
+  // 含括號與係數
+  {eq:"(x＋1)：(2x＋3) ＝ 4：9", src:"課本 p.88 例4(2)",
+   s1:{l:"9",lp:"x＋1",r:"4",rp:"2x＋3"},
+   s2:{lx:"9",lc:"＋9",rx:"8",rc:"＋12"},
+   s3:{lx:"1",rc:"3"}, x:3},
+  {eq:"(x＋2)：(3x＋1) ＝ 1：3", src:"自編 C1",
+   s1:{l:"3",lp:"x＋2",r:"1",rp:"3x＋1"},
+   s2:{lx:"3",lc:"＋6",rx:"3",rc:"＋1"},
+   s3:{lx:"0",rc:"5"}, x:5, soloS3:true},
+  {eq:"(2x＋1)：(x＋4) ＝ 3：2", src:"自編 C2",
+   s1:{l:"2",lp:"2x＋1",r:"3",rp:"x＋4"},
+   s2:{lx:"4",lc:"＋2",rx:"3",rc:"＋12"},
+   s3:{lx:"1",rc:"10"}, x:10},
+  {eq:"(x＋5)：(2x－1) ＝ 2：3", src:"自編 C3",
+   s1:{l:"3",lp:"x＋5",r:"2",rp:"2x－1"},
+   s2:{lx:"3",lc:"＋15",rx:"4",rc:"－2"},
+   s3:{lx:"1",rc:"－17"}, x:-17},
+  {eq:"(3x＋1)：(x＋3) ＝ 5：2", src:"自編 C4",
+   s1:{l:"2",lp:"3x＋1",r:"5",rp:"x＋3"},
+   s2:{lx:"6",lc:"＋2",rx:"5",rc:"＋15"},
+   s3:{lx:"1",rc:"13"}, x:13},
+  // 含括號與負數
+  {eq:"(2x－7)：(－6) ＝ (x＋3)：10", src:"課本 p.88 例4 隨堂練習(2)",
+   s1:{l:"10",lp:"2x－7",r:"－6",rp:"x＋3"},
+   s2:{lx:"20",lc:"－70",rx:"－6",rc:"－18"},
+   s3:{lx:"26",rc:"52"}, x:2},
+  {eq:"(x－4)：(－2) ＝ (x＋2)：6", src:"自編 D1",
+   s1:{l:"6",lp:"x－4",r:"－2",rp:"x＋2"},
+   s2:{lx:"6",lc:"－24",rx:"－2",rc:"－4"},
+   s3:{lx:"8",rc:"20"}, x:2.5},
+  {eq:"(3x＋1)：(－4) ＝ (x－2)：2", src:"自編 D2",
+   s1:{l:"2",lp:"3x＋1",r:"－4",rp:"x－2"},
+   s2:{lx:"6",lc:"＋2",rx:"－4",rc:"＋8"},
+   s3:{lx:"10",rc:"6"}, x:0.6},
+  {eq:"(2x－3)：5 ＝ (x＋1)：(－3)", src:"自編 D3",
+   s1:{l:"－3",lp:"2x－3",r:"5",rp:"x＋1"},
+   s2:{lx:"－6",lc:"＋9",rx:"5",rc:"＋5"},
+   s3:{lx:"11",rc:"－4"}, x:-4},
+  {eq:"(x＋6)：(－5) ＝ (2x－1)：(－8)", src:"自編 D4",
+   s1:{l:"－8",lp:"x＋6",r:"－5",rp:"2x－1"},
+   s2:{lx:"－8",lc:"－48",rx:"－10",rc:"＋5"},
+   s3:{lx:"2",rc:"53"}, x:26.5},
+];
+
+const ROOMS=[
+  {name:"地下室",icon:"🏚️"},
+  {name:"走廊",icon:"🚪"},
+  {name:"控制室",icon:"⚙️"},
+  {name:"出口",icon:"🔓"}
+];
+
+// pick 4 random non-repeating questions
+function pickQuestions(){
+  const arr=[...BANK];
+  const out=[];
+  while(out.length<4){
+    const idx=Math.floor(Math.random()*arr.length);
+    out.push(arr.splice(idx,1)[0]);
+  }
+  return out;
+}
+
+// format answer for display/checking
+function fmtAns(n){
+  if(Number.isInteger(n)) return String(n);
+  // show fraction if clean, else 1-decimal
+  const s=String(n);
+  if(s.includes('.')){
+    const dec=s.split('.')[1];
+    if(dec.length<=2) return s;
+  }
+  return String(n);
+}
+
+let questions=[];
+let state={};
+
+function initState(){
+  questions=pickQuestions();
+  state={
+    lvl:0,
+    scores:[0,0,0,0],
+    errors:[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+    hintUsed:[[false,false,false,false],[false,false,false,false],[false,false,false,false],[false,false,false,false]],
+    stepScores:[[100,100,100,100],[100,100,100,100],[100,100,100,100],[100,100,100,100]]
+  };
+}
+
+let locksUnlocked=0;
+
+// Build steps config from question
+function buildSteps(q){
+  const isNeg=(s)=>s&&s.startsWith('－');
+  // Step 1: cross-multiply display
+  const s1display=`${q.s1.l}(${q.s1.lp}) ＝ ${q.s1.r}(${q.s1.rp})`;
+  // Step 2: expanded
+  const lsign=q.s2.lc.startsWith('＋')?'＋':'－';
+  const lnum=q.s2.lc.replace('＋','').replace('－','');
+  const rsign=q.s2.rc.startsWith('＋')?'＋':'－';
+  const rnum=q.s2.rc.replace('＋','').replace('－','');
+  const s2display=`${q.s2.lx}x ${q.s2.lc} ＝ ${q.s2.rx}x ${q.s2.rc}`;
+  // Step 3: simplified (ax=b)
+  const aCoef=parseInt(q.s2.lx)-parseInt(q.s2.rx);
+  const lcVal=parseInt(q.s2.lc.replace('＋','').replace('－','-'));
+  const rcVal=parseInt(q.s2.rc.replace('＋','').replace('－','-'));
+  const bConst=rcVal-lcVal;
+  const s3display=`${aCoef}x ＝ ${bConst}`;
+  // Step 4: answer
+  const xAns=fmtAns(q.x);
+
+  return [
+    {
+      title:"步驟一：外項乘積 ＝ 內項乘積",
+      hint:`外項是比例式兩端的項：${q.s1.lp} 和 ${q.s1.r}；內項是中間的項：${q.s1.l} 和 ${q.s1.rp}。外×外 ＝ 內×內。`,
+      blanks:[
+        {id:"a",ans:String(q.s1.l),label:`__(${q.s1.lp}) ＝`},
+        {id:"b",ans:String(q.s1.r),label:`__(${q.s1.rp})`}
+      ],
+      solution: s1display
+    },
+    {
+      title:"步驟二：展開括號",
+      hint:`用分配律 a(b±c)＝ab±ac 展開兩邊的括號，注意負數符號要一起帶入。`,
+      blanks:[
+        {id:"c",ans:String(Math.abs(lcVal)),label:`${q.s2.lx}x ${lsign} __`},
+        {id:"d",ans:String(Math.abs(rcVal)),label:`＝ ${q.s2.rx}x ${rsign} __`}
+      ],
+      solution: s2display
+    },
+    {
+      title:"步驟三：移項（整理成 ax ＝ b）",
+      hint:`把含 x 的項全移到左邊，常數全移到右邊（移項要變號）。`,
+      blanks:[
+        {id:"e",ans:String(Math.abs(aCoef)),label:`__x ＝`},
+        {id:"f",ans:String(Math.abs(bConst)),label:"__"}
+      ],
+      solution: s3display,
+      signCheck:{eSign:aCoef<0,fSign:bConst<0,eAns:String(aCoef),fAns:String(bConst)}
+    },
+    {
+      title:"步驟四：求出 x 的值",
+      hint:`將步驟三的等式兩邊同除以 x 的係數，即可求出 x。`,
+      blanks:[
+        {id:"x",ans:xAns,label:"x ＝ __",isX:true}
+      ],
+      solution:`x ＝ ${xAns}`
+    }
+  ];
+}
+
+function buildGame(){
+  const q=questions[state.lvl];
+  const rm=ROOMS[state.lvl];
+  document.getElementById('level-num').textContent=state.lvl+1;
+  document.getElementById('level-source').textContent=q.src;
+  document.getElementById('room-label').textContent=`第 ${state.lvl+1} 關`;
+  document.getElementById('room-title').textContent=`${rm.icon} ${rm.name}`;
+  document.getElementById('eq-display').textContent=q.eq;
+  locksUnlocked=0;
+
+  // progress dots
+  const dots=document.getElementById('progress-dots');
+  dots.innerHTML='';
+  for(let i=0;i<4;i++){
+    const d=document.createElement('div');
+    d.className='prog-dot'+(i<state.lvl?' done':i===state.lvl?' current':'');
+    dots.appendChild(d);
+  }
+
+  // locks (4 now)
+  const locks=document.getElementById('locks-display');
+  locks.innerHTML='';
+  for(let i=0;i<4;i++){
+    const lk=document.createElement('div');
+    lk.className='lock';
+    lk.id=`lock-${i}`;
+    locks.appendChild(lk);
+  }
+
+  document.getElementById('door').className='door';
+  document.getElementById('door').style.boxShadow='';
+  document.getElementById('result-panel').className='result-panel';
+
+  const steps=buildSteps(q);
+  const area=document.getElementById('steps-area');
+  area.innerHTML='';
+
+  steps.forEach((s,si)=>{
+    const div=document.createElement('div');
+    div.className='step'+(si===0?' active':'');
+    div.id=`step-${si}`;
+
+    // build input row
+    let rowHtml='';
+    if(s.blanks.length===1 && s.blanks[0].isX){
+      rowHtml=`<span>x ＝ </span><input class="step-input" id="inp-${si}-x" maxlength="8" placeholder="?" style="width:80px">`;
+    } else if(si===2){
+      // step 3: sign might be negative, accept absolute value input
+      const sc=s.signCheck;
+      rowHtml=`
+        ${sc.eSign?'－':''}
+        <input class="step-input" id="inp-${si}-e" maxlength="6" placeholder="?" style="width:64px">
+        <span>x ＝ </span>
+        ${sc.fSign?'－':''}
+        <input class="step-input" id="inp-${si}-f" maxlength="6" placeholder="?" style="width:64px">
+      `;
+    } else {
+      s.blanks.forEach(b=>{
+        rowHtml+=`<span>${b.label.split('__')[0]}</span><input class="step-input" id="inp-${si}-${b.id}" maxlength="6" placeholder="?"><span>${b.label.split('__')[1]||''}</span>`;
+      });
+    }
+
+    div.innerHTML=`
+      <div class="step-header">
+        <div class="step-num">${si+1}</div>
+        <div class="step-title">${s.title}</div>
+        <button class="step-hint-btn" id="hint-btn-${si}" onclick="showHint(${si})">💡 提示 (－30分)</button>
+      </div>
+      <div class="hint-box" id="hint-${si}">${s.hint}</div>
+      <div class="input-row" id="row-${si}">${rowHtml}</div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <button class="check-btn" id="check-${si}" onclick="checkStep(${si})"${si>0?' disabled':''}>確認</button>
+        <span class="error-badge" id="err-${si}"></span>
+      </div>
+    `;
+    area.appendChild(div);
+  });
+
+  document.getElementById('total-score').textContent=state.scores.reduce((a,b)=>a+b,0);
+}
+
+function showHint(si){
+  if(state.hintUsed[state.lvl][si]) return;
+  state.hintUsed[state.lvl][si]=true;
+  state.stepScores[state.lvl][si]=Math.max(0,state.stepScores[state.lvl][si]-30);
+  document.getElementById(`hint-${si}`).className='hint-box visible';
+  const btn=document.getElementById(`hint-btn-${si}`);
+  btn.disabled=true;
+  btn.textContent='💡 已使用提示';
+}
+
+function checkStep(si){
+  const q=questions[state.lvl];
+  const steps=buildSteps(q);
+  const s=steps[si];
+  let allCorrect=true;
+
+  const markInput=(id,correct)=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    if(correct){el.classList.add('correct-input');el.classList.remove('wrong-input');}
+    else{allCorrect=false;el.classList.add('wrong-input');setTimeout(()=>el.classList.remove('wrong-input'),500);}
+  };
+
+  if(si===3){
+    // step 4: x value
+    const inp=document.getElementById(`inp-3-x`);
+    const val=inp?inp.value.trim():'';
+    markInput('inp-3-x', val===s.blanks[0].ans);
+  } else if(si===2){
+    // step 3: accept absolute values
+    const sc=s.signCheck;
+    const eEl=document.getElementById(`inp-2-e`);
+    const fEl=document.getElementById(`inp-2-f`);
+    const eVal=eEl?eEl.value.trim():'';
+    const fVal=fEl?fEl.value.trim():'';
+    markInput('inp-2-e', eVal===s.blanks[0].ans);
+    markInput('inp-2-f', fVal===s.blanks[1].ans);
+  } else {
+    s.blanks.forEach(b=>{
+      markInput(`inp-${si}-${b.id}`, document.getElementById(`inp-${si}-${b.id}`)?.value.trim()===b.ans);
+    });
+  }
+
+  if(!allCorrect){
+    state.errors[state.lvl][si]++;
+    state.stepScores[state.lvl][si]=Math.max(0,state.stepScores[state.lvl][si]-20);
+    document.getElementById(`err-${si}`).textContent=`錯誤 ${state.errors[state.lvl][si]} 次`;
+    const door=document.getElementById('door');
+    door.classList.add('shake');
+    door.style.boxShadow='0 0 20px #8a2a2a';
+    setTimeout(()=>{door.classList.remove('shake');door.style.boxShadow='';},600);
+    return;
+  }
+
+  // correct
+  const stepEl=document.getElementById(`step-${si}`);
+  stepEl.className='step correct';
+  document.getElementById(`check-${si}`).disabled=true;
+  document.getElementById(`hint-btn-${si}`).disabled=true;
+  // disable inputs
+  ['a','b','c','d','e','f','x'].forEach(k=>{
+    const el=document.getElementById(`inp-${si}-${k}`);
+    if(el) el.disabled=true;
+  });
+
+  // unlock lock
+  const lk=document.getElementById(`lock-${locksUnlocked}`);
+  lk.className='lock unlocked';
+  locksUnlocked++;
+
+  // enable next step
+  if(si+1<4){
+    document.getElementById(`check-${si+1}`).disabled=false;
+    document.getElementById(`step-${si+1}`).className='step active';
+  }
+
+  if(locksUnlocked===4){
+    const door=document.getElementById('door');
+    door.className='door open';
+    door.style.boxShadow='0 0 24px #2a6a4a';
+    setTimeout(showResult,600);
+  }
+}
+
+function showResult(){
+  const q=questions[state.lvl];
+  const steps=buildSteps(q);
+  const ss=state.stepScores[state.lvl];
+  const lvlScore=ss.reduce((a,b)=>a+b,0);
+  state.scores[state.lvl]=lvlScore;
+
+  const solHtml=steps.map((s,i)=>
+    `<div><span class="sol-step">步驟${i+1}：</span>${s.solution}</div>`
+  ).join('');
+
+  const isLast=state.lvl===3;
+  const errSummary=state.errors[state.lvl].map((e,i)=>`步驟${i+1}: ${e}次`).join('　');
+
+  const panel=document.getElementById('result-panel');
+  panel.innerHTML=`
+    <div style="font-size:22px;font-weight:600;color:#c0b0ff;margin-bottom:4px">本關得分：${lvlScore} / 400</div>
+    <div style="font-size:12px;color:#7a6aaa;margin-bottom:12px">錯誤：${errSummary}</div>
+    <div class="solution">${solHtml}</div>
+    <div class="action-row">
+      ${!isLast
+        ?`<button class="btn-main" onclick="nextLevel()">開啟下一扇門 →</button>`
+        :`<button class="btn-main" onclick="showFinal()">查看最終結果</button>`}
+      <button class="btn-sec" onclick="retryLevel()">重試本關</button>
+    </div>
+  `;
+  panel.className='result-panel visible fade-in';
+  document.getElementById('total-score').textContent=state.scores.reduce((a,b)=>a+b,0);
+}
+
+function nextLevel(){
+  state.lvl++;
+  buildGame();
+  document.getElementById('result-panel').className='result-panel';
+  window.scrollTo(0,0);
+}
+
+function retryLevel(){
+  const lvl=state.lvl;
+  state.errors[lvl]=[0,0,0,0];
+  state.hintUsed[lvl]=[false,false,false,false];
+  state.stepScores[lvl]=[100,100,100,100];
+  state.scores[lvl]=0;
+  buildGame();
+}
+
+function showFinal(){
+  const total=state.scores.reduce((a,b)=>a+b,0);
+  document.getElementById('main-game').style.display='none';
+  const fs=document.getElementById('final-screen');
+  fs.className='final-screen visible fade-in';
+  let grade,msg,stars;
+  if(total>=1500){grade='S';msg='完美逃脫！四步驟全程幾乎零失誤，解謎高手！';stars='★★★★★';}
+  else if(total>=1200){grade='A';msg='優秀！解題思路清晰，展開與移項都掌握得不錯。';stars='★★★★☆';}
+  else if(total>=900){grade='B';msg='不錯！基本概念掌握了，多練習括號展開與移項。';stars='★★★☆☆';}
+  else{grade='C';msg='繼續加油！建議複習交叉相乘原理與分配律。';stars='★★☆☆☆';}
+  document.getElementById('final-grade').textContent=grade;
+  document.getElementById('final-total').textContent=`總分 ${total} / 1600`;
+  document.getElementById('final-msg').textContent=msg;
+  document.getElementById('stars').textContent=stars;
+  document.getElementById('used-qs').textContent='本次題目：'+questions.map(q=>q.src).join(' ／ ');
+}
+
+function restartGame(){
+  initState();
+  document.getElementById('main-game').style.display='block';
+  document.getElementById('final-screen').className='final-screen';
+  buildGame();
+}
+
+initState();
+buildGame();
+</script>
+</body>
+</html>
