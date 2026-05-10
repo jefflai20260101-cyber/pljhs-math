@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數據偵探：正比與反比判斷練習</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(135deg, #0a1628 0%, #1a2f4f 50%, #0a1628 100%);
+    color: #f5f5f5;
+    min-height: 100vh;
+    padding: 20px 10px;
+    line-height: 1.7;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  /* 標題區 */
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 2px solid #d4a017;
+    border-radius: 12px;
+    background: rgba(10, 22, 40, 0.7);
+    box-shadow: 0 4px 20px rgba(212, 160, 23, 0.2);
+  }
+  
+  header h1 {
+    color: #d4a017;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  
+  header p {
+    color: #b8c5d6;
+    font-size: 0.95rem;
+  }
+  
+  /* 進度與分數列 */
+  .stats-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a2f4f;
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+    border: 2px solid #d4a017;
+  }
+  
+  .stats-item {
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+  
+  .stats-item .value {
+    color: #d4a017;
+    font-size: 1.2rem;
+  }
+  
+  .progress-bar {
+    flex: 1;
+    min-width: 150px;
+    height: 12px;
+    background: #e0e6ee;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #1a2f4f;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #d4a017, #ffd700);
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+  
+  /* 題目卡片 */
+  .question-card {
+    background: rgba(255, 255, 255, 0.97);
+    color: #1a2f4f;
+    padding: 25px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.4s ease;
+  }
+  
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  .question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #d4a017;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .question-number {
+    background: #1a2f4f;
+    color: #d4a017;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+  
+  .question-type {
+    color: #6c7a89;
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+  
+  .question-text {
+    font-size: 1.05rem;
+    margin-bottom: 15px;
+    line-height: 1.8;
+  }
+  
+  .question-text strong {
+    color: #1a2f4f;
+  }
+  
+  .question-text .var-x {
+    color: #d4a017;
+    font-weight: bold;
+  }
+  
+  .question-text .var-y {
+    color: #1976d2;
+    font-weight: bold;
+  }
+  
+  /* 表格 */
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  
+  .data-table {
+    border-collapse: collapse;
+    margin: 0 auto;
+    font-size: 0.95rem;
+    min-width: 280px;
+  }
+  
+  .data-table th, .data-table td {
+    border: 2px solid #1a2f4f;
+    padding: 8px 14px;
+    text-align: center;
+    background: white;
+  }
+  
+  .data-table th {
+    background: #1a2f4f;
+    color: #d4a017;
+    font-weight: bold;
+  }
+  
+  /* 選項按鈕 */
+  .options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 18px 0;
+  }
+  
+  .option-btn {
+    padding: 14px 8px;
+    border: 2px solid #1a2f4f;
+    background: white;
+    color: #1a2f4f;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-family: inherit;
+  }
+  
+  .option-btn:hover:not(:disabled) {
+    background: #1a2f4f;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 47, 79, 0.4);
+  }
+  
+  .option-btn.correct {
+    background: #28a745;
+    color: white;
+    border-color: #1e7e34;
+    animation: pulse 0.5s ease;
+  }
+  
+  .option-btn.wrong {
+    background: #dc3545;
+    color: white;
+    border-color: #b02a37;
+    animation: shake 0.4s ease;
+  }
+  
+  .option-btn.fade {
+    opacity: 0.5;
+  }
+  
+  .option-btn:disabled {
+    cursor: not-allowed;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+  
+  /* 偵探筆記 */
+  .detective-note {
+    background: #e3f2fd;
+    color: #0d47a1;
+    border: 2px solid #1976d2;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 0.95rem;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  
+  .detective-note.show { display: block; }
+  
+  .detective-note .note-title {
+    font-weight: bold;
+    color: #0d47a1;
+    margin-bottom: 8px;
+    font-size: 1rem;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* 提示按鈕 */
+  .hint-section {
+    margin: 12px 0;
+    text-align: center;
+  }
+  
+  .hint-btn {
+    background: transparent;
+    color: #1a2f4f;
+    border: 2px dashed #1a2f4f;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+  }
+  
+  .hint-btn:hover {
+    background: #1a2f4f;
+    color: white;
+  }
+  
+  .hint-content {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+    padding: 12px 15px;
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+    display: none;
+    text-align: left;
+    font-size: 0.95rem;
+  }
+  
+  .hint-content.show { display: block; }
+  
+  /* 下一題按鈕 */
+  .next-btn {
+    background: #d4a017;
+    color: #1a2f4f;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: bold;
+    margin: 10px auto 0;
+    display: none;
+    font-family: inherit;
+    transition: all 0.3s ease;
+  }
+  
+  .next-btn:hover {
+    background: #ffd700;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 160, 23, 0.5);
+  }
+  
+  .next-btn.show {
+    display: block;
+  }
+  
+  /* 結算畫面 */
+  .result-screen {
+    background: rgba(255, 255, 255, 0.97);
+    color: #1a2f4f;
+    padding: 30px 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    display: none;
+  }
+  
+  .result-screen.show {
+    display: block;
+    animation: slideIn 0.5s ease;
+  }
+  
+  .medal {
+    width: 140px;
+    height: 140px;
+    margin: 15px auto;
+    background: radial-gradient(circle, #ffd700 0%, #d4a017 60%, #8b6914 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+    position: relative;
+  }
+  
+  .medal::before {
+    content: "★";
+    font-size: 4rem;
+    color: #1a2f4f;
+  }
+  
+  .medal::after {
+    content: "";
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border: 3px dashed #d4a017;
+    border-radius: 50%;
+    animation: rotate 15s linear infinite;
+  }
+  
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .result-title {
+    color: #d4a017;
+    font-size: clamp(1.4rem, 5vw, 1.8rem);
+    margin: 15px 0 8px;
+  }
+  
+  .result-rank {
+    color: #1a2f4f;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    font-weight: bold;
+  }
+  
+  .result-score {
+    background: #f0f4f8;
+    border-radius: 12px;
+    padding: 18px;
+    margin: 15px 0;
+    border: 2px solid #d4a017;
+  }
+  
+  .result-score .big-num {
+    font-size: 3rem;
+    color: #d4a017;
+    font-weight: bold;
+    line-height: 1;
+  }
+  
+  .result-score .total {
+    color: #6c7a89;
+    font-size: 1.2rem;
+  }
+  
+  .summary-box {
+    background: white;
+    border: 2px solid #1a2f4f;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    text-align: left;
+  }
+  
+  .summary-box h3 {
+    color: #1a2f4f;
+    margin-bottom: 10px;
+    text-align: center;
+    border-bottom: 2px solid #d4a017;
+    padding-bottom: 6px;
+  }
+  
+  .summary-item {
+    padding: 8px 10px;
+    margin: 6px 0;
+    background: #f0f4f8;
+    border-left: 4px solid #d4a017;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  
+  .summary-item strong {
+    color: #d4a017;
+  }
+  
+  .restart-btn {
+    background: #1a2f4f;
+    color: #d4a017;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: bold;
+    margin-top: 15px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+  }
+  
+  .restart-btn:hover {
+    background: #2a4f7f;
+    transform: translateY(-2px);
+  }
+  
+  /* 響應式 */
+  @media (max-width: 480px) {
+    body { padding: 10px 5px; }
+    .question-card { padding: 18px 14px; }
+    .options { grid-template-columns: 1fr; gap: 8px; }
+    .option-btn { padding: 12px; font-size: 0.95rem; }
+    .data-table { font-size: 0.88rem; }
+    .data-table th, .data-table td { padding: 6px 10px; }
+    .stats-bar { padding: 10px 12px; }
+    .stats-item { font-size: 0.88rem; }
+    .stats-item .value { font-size: 1.05rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🕵️ 數據偵探事務所 🔍</h1>
+    <p>判斷下列關係屬於：正比、反比、還是不成比例？</p>
+  </header>
+  
+  <div class="stats-bar">
+    <div class="stats-item">第 <span class="value" id="currentNum">1</span> / <span id="totalNum">10</span> 題</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="stats-item">答對：<span class="value" id="correctNum">0</span></div>
+  </div>
+  
+  <div id="quizArea"></div>
+  
+  <div class="result-screen" id="resultScreen">
+    <div class="medal"></div>
+    <h2 class="result-title">調查報告</h2>
+    <p class="result-rank" id="resultRank"></p>
+    <div class="result-score">
+      <div><span class="big-num" id="finalScore">0</span><span class="total"> / 10</span></div>
+      <div style="margin-top:8px; color:#1a2f4f;">答對題數</div>
+    </div>
+    <div class="summary-box">
+      <h3>📚 偵探的三大判斷法則</h3>
+      <div class="summary-item">
+        <strong>正比：</strong>當 x 變 2 倍，y 也變 2 倍；x 變 3 倍，y 也變 3 倍<br>
+        ➜ 兩者「同步增加」，y ÷ x 是定值
+      </div>
+      <div class="summary-item">
+        <strong>反比：</strong>當 x 變 2 倍，y 變 1/2 倍；x 變 3 倍，y 變 1/3 倍<br>
+        ➜ 一個變大、另一個變小，x × y 是定值
+      </div>
+      <div class="summary-item">
+        <strong>不成比例：</strong>商和積都不是定值，例如年齡差固定的兩人
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restart()">🔄 抽新題目再挑戰</button>
+  </div>
+</div>
+
+<script>
+  // ========== 題庫（共 30 題，每次隨機抽 10 題） ==========
+  const questionBank = [
+    // === 正比情境題 ===
+    {
+      type: '生活情境',
+      text: '小恩去買蘋果，每顆蘋果價錢相同。<span class="var-x">x</span> 為買的蘋果顆數，<span class="var-y">y</span> 為總價錢',
+      hint: '想想看：當蘋果顆數 x 變成 2 倍，總價錢 y 是不是也會變成 2 倍？',
+      answer: '正比',
+      explanation: '單價固定時，顆數變 2 倍，總價也變 2 倍。y÷x 永遠等於單價（定值），所以是正比。'
+    },
+    {
+      type: '生活情境',
+      text: '一種餅乾每 40 公克含有 200 大卡熱量。<span class="var-x">x</span> 為餅乾的公克數，<span class="var-y">y</span> 為含的熱量（大卡）',
+      hint: '40 公克對應 200 大卡，那 80 公克會對應多少大卡？兩者是否同步增減？',
+      answer: '正比',
+      explanation: '每公克熱量固定（5 大卡）。公克數變 2 倍，熱量也變 2 倍。y÷x 為定值，所以是正比。'
+    },
+    {
+      type: '生活情境',
+      text: '汽車以固定速率行駛。<span class="var-x">x</span> 為行駛時間（小時），<span class="var-y">y</span> 為行駛距離（公里）',
+      hint: '速率固定時，開 1 小時走 60 公里，開 2 小時走多少？同步增減嗎？',
+      answer: '正比',
+      explanation: '速率固定時，距離 = 速率 × 時間。時間變 2 倍，距離也變 2 倍。y÷x 為定值（速率），所以是正比。'
+    },
+    {
+      type: '生活情境',
+      text: '一條繩子均勻分段。<span class="var-x">x</span> 為繩子的段數（每段長度相同），<span class="var-y">y</span> 為繩子的總長度',
+      hint: '每段長度固定，段數變 2 倍，總長度會變幾倍？',
+      answer: '正比',
+      explanation: '每段長度固定時，段數變 2 倍，總長度也變 2 倍。y÷x 為定值（每段長度），所以是正比。'
+    },
+    {
+      type: '生活情境',
+      text: '同一個正方形。<span class="var-x">x</span> 為邊長，<span class="var-y">y</span> 為周長',
+      hint: '邊長 1 時周長 4，邊長 2 時周長 8。當邊長變 2 倍，周長變幾倍？',
+      answer: '正比',
+      explanation: '正方形周長 = 邊長 × 4。邊長變 2 倍，周長也變 2 倍。y÷x 永遠等於 4（定值），所以是正比。'
+    },
+    {
+      type: '生活情境',
+      text: '阿信打工每小時工資固定。<span class="var-x">x</span> 為工作時數，<span class="var-y">y</span> 為總薪水',
+      hint: '時薪固定時，工作 1 小時和工作 2 小時的薪水是什麼關係？',
+      answer: '正比',
+      explanation: '時薪固定時，工時變 2 倍，薪水也變 2 倍。y÷x 為定值（時薪），所以是正比。'
+    },
+    {
+      type: '生活情境',
+      text: '一台影印機影印速度固定。<span class="var-x">x</span> 為影印張數，<span class="var-y">y</span> 為所花時間',
+      hint: '每分鐘印的張數固定，印 100 張和印 200 張的時間，是否同步增減？',
+      answer: '正比',
+      explanation: '影印速度固定時，張數變 2 倍，時間也變 2 倍。y÷x 為定值，所以是正比。'
+    },
+    
+    // === 反比情境題 ===
+    {
+      type: '生活情境',
+      text: '一個工程，每位工人每天工作量固定。<span class="var-x">x</span> 為工人人數，<span class="var-y">y</span> 為完工天數',
+      hint: '人多則天數少，人少則天數多。把總工作量算出來，會發現什麼？',
+      answer: '反比',
+      explanation: '人數 × 天數 = 總工作量（固定）。一個變大、另一個變小，x×y 為定值，所以是反比。'
+    },
+    {
+      type: '生活情境',
+      text: '毛毛要在 120 分鐘內完成相同的手工飾品。<span class="var-x">x</span> 為完成的個數，<span class="var-y">y</span> 為每個花的時間（分鐘）',
+      hint: '總時間固定（120 分鐘）。做的個數越多，每個花的時間就越⋯⋯？',
+      answer: '反比',
+      explanation: '個數 × 每個的時間 = 120（總時間固定）。x×y 為定值，所以是反比。'
+    },
+    {
+      type: '生活情境',
+      text: '面積固定為 24 的長方形。<span class="var-x">x</span> 為長，<span class="var-y">y</span> 為寬',
+      hint: '長 × 寬 = 面積（固定）。長變大時，寬要怎麼變才能維持面積不變？',
+      answer: '反比',
+      explanation: '長 × 寬 = 24（面積固定）。x×y 為定值，所以長與寬成反比。'
+    },
+    {
+      type: '生活情境',
+      text: '從家裡到學校的路程固定。<span class="var-x">x</span> 為走路速率，<span class="var-y">y</span> 為所花時間',
+      hint: '路程固定時，走得越快，需要的時間就⋯⋯？兩者乘起來會是什麼？',
+      answer: '反比',
+      explanation: '速率 × 時間 = 路程（固定）。x×y 為定值，所以速率與時間成反比。'
+    },
+    {
+      type: '生活情境',
+      text: '把 100 元平分。<span class="var-x">x</span> 為分配的人數，<span class="var-y">y</span> 為每人分到的錢',
+      hint: '總金額固定（100 元）。人數越多，每人分到越⋯⋯？',
+      answer: '反比',
+      explanation: '人數 × 每人分到的錢 = 100（總額固定）。x×y 為定值，所以是反比。'
+    },
+    {
+      type: '生活情境',
+      text: '裝同樣容量水的水桶。<span class="var-x">x</span> 為水龍頭出水速率（公升/分鐘），<span class="var-y">y</span> 為裝滿所需時間',
+      hint: '水桶容量固定。出水快則時間短，出水慢則時間長。兩者乘起來會是什麼？',
+      answer: '反比',
+      explanation: '速率 × 時間 = 容量（固定）。x×y 為定值，所以是反比。'
+    },
+    {
+      type: '生活情境',
+      text: '某商品賣出單價與其體積成反比。<span class="var-x">x</span> 為體積，<span class="var-y">y</span> 為單價',
+      hint: '題目已直接告訴你關係了！體積越大，單價越⋯⋯？',
+      answer: '反比',
+      explanation: '題目明確說「成反比」，且符合 x×y = 定值的特性。'
+    },
+    
+    // === 不成比例題（陷阱題） ===
+    {
+      type: '生活情境',
+      text: '小珠和姊姊年齡差固定。<span class="var-x">x</span> 為小珠的年齡，<span class="var-y">y</span> 為姊姊的年齡',
+      hint: '小珠 1 歲時姊姊 4 歲，小珠 2 歲時姊姊 5 歲。看看 y÷x 是不是定值？',
+      answer: '不成比例',
+      explanation: '兩人年齡差固定（不是倍數關係）。當小珠變 2 倍年齡，姊姊不會也變 2 倍，y÷x 不是定值，xy 也不是定值，所以不成比例。'
+    },
+    {
+      type: '生活情境',
+      text: '長方形的長 <span class="var-x">x</span> 改變，但寬不固定。<span class="var-y">y</span> 為長方形的周長',
+      hint: '若寬不固定，長 1 時周長可能是 6（寬=2），長 2 時周長可能是 10（寬=3）。y÷x 是定值嗎？',
+      answer: '不成比例',
+      explanation: '當寬不固定時，長變 2 倍，周長不會剛好變 2 倍。y÷x 不是定值，xy 也不是定值，所以不成比例。'
+    },
+    {
+      type: '生活情境',
+      text: '梯形的上底為 <span class="var-x">x</span>，下底和高都不固定。<span class="var-y">y</span> 為梯形的面積',
+      hint: '面積 =（上底+下底）× 高 ÷ 2。當下底和高都變動時，y 與 x 有固定倍數關係嗎？',
+      answer: '不成比例',
+      explanation: '下底和高都不固定時，y 與 x 沒有定值的商或積關係，所以不成比例。'
+    },
+    {
+      type: '生活情境',
+      text: '計程車起跳 70 元，之後每公里加 20 元。<span class="var-x">x</span> 為行駛公里數，<span class="var-y">y</span> 為車資',
+      hint: '0 公里時車資 70 元（不是 0！），1 公里時 90 元。當公里數變 2 倍，車資會剛好變 2 倍嗎？',
+      answer: '不成比例',
+      explanation: '因為有起跳費 70 元，當 x=0 時 y=70（不通過原點）。x 變 2 倍時 y 不會剛好變 2 倍，所以不成比例。'
+    },
+    {
+      type: '生活情境',
+      text: '一個體重 50 公斤的人。<span class="var-x">x</span> 為他的身高（公分），<span class="var-y">y</span> 為他的體重（公斤）',
+      hint: '同一個人的體重不會隨身高變化（題目說體重固定 50 公斤）。y 是定值嗎？',
+      answer: '不成比例',
+      explanation: '體重永遠是 50（定值），不論身高怎麼變。y÷x 不是定值，xy 也不是定值，所以不成比例。'
+    },
+    {
+      type: '生活情境',
+      text: '一個正方形邊長 <span class="var-x">x</span>，<span class="var-y">y</span> 為它的面積',
+      hint: '邊長 1 面積 1，邊長 2 面積 4，邊長 3 面積 9。當邊長變 2 倍，面積變幾倍？',
+      answer: '不成比例',
+      explanation: '邊長變 2 倍時，面積變 4 倍（不是 2 倍）。y÷x 不是定值（會隨 x 變大），xy 也不是定值，所以不成比例。'
+    },
+    {
+      type: '生活情境',
+      text: '阿明的存款每月增加 1000 元（最初有 5000 元）。<span class="var-x">x</span> 為月份數，<span class="var-y">y</span> 為總存款',
+      hint: '0 個月時有 5000 元（不是 0），1 個月時 6000 元。當月份變 2 倍，存款會變 2 倍嗎？',
+      answer: '不成比例',
+      explanation: '因為最初有 5000 元（不通過原點），月份變 2 倍時，存款不會剛好變 2 倍，所以不成比例。'
+    },
+    
+    // === 表格題 ===
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','3','4','6','18'],['y','12','9','6','2']],
+      hint: '試著計算每組的 x×y：3×12=？、4×9=？、6×6=？、18×2=？，看看有什麼規律？',
+      answer: '反比',
+      explanation: 'x × y 全部等於 36（定值），一個變大、另一個變小，所以是反比。'
+    },
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','1','2','3','5'],['y','7','14','21','35']],
+      hint: '試著計算每組的 y÷x：7÷1、14÷2、21÷3、35÷5，看看有什麼規律？',
+      answer: '正比',
+      explanation: 'y ÷ x 全部等於 7（定值），兩者同步增減，所以是正比。'
+    },
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','1','2','3','4'],['y','5','7','9','11']],
+      hint: '計算 y÷x：5÷1=5、7÷2=3.5、9÷3=3，是定值嗎？再算 xy：5、14、27，是定值嗎？',
+      answer: '不成比例',
+      explanation: 'y÷x 不是定值（5、3.5、3、2.75），xy 也不是定值。仔細看：y = 2x + 3，不通過原點，所以不成比例。'
+    },
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','2','4','5','10'],['y','30','15','12','6']],
+      hint: '試著計算每組的 x×y：2×30、4×15、5×12、10×6，看看有什麼規律？',
+      answer: '反比',
+      explanation: 'x × y 全部等於 60（定值），所以是反比。'
+    },
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','2','3','5','8'],['y','8','12','20','32']],
+      hint: '試著計算每組的 y÷x：8÷2、12÷3、20÷5、32÷8，看看有什麼規律？',
+      answer: '正比',
+      explanation: 'y ÷ x 全部等於 4（定值），所以是正比。'
+    },
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','1','2','3','4'],['y','1','4','9','16']],
+      hint: '計算 y÷x：1、2、3、4，是定值嗎？再計算 xy：1、8、27、64，是定值嗎？',
+      answer: '不成比例',
+      explanation: 'y÷x 不是定值（會越來越大），xy 也不是定值。實際上 y = x×x，所以不成比例。'
+    },
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','1','2','4','8'],['y','24','12','6','3']],
+      hint: '試著計算每組的 x×y，看看是不是定值？',
+      answer: '反比',
+      explanation: 'x × y 全部等於 24（定值），所以是反比。'
+    },
+    {
+      type: '數據觀察',
+      text: '觀察下列表格中 <span class="var-x">x</span> 與 <span class="var-y">y</span> 的關係：',
+      table: [['x','1','2','3','4'],['y','10','10','10','10']],
+      hint: 'y 都不變（永遠是 10）。計算 y÷x：10、5、3.33、2.5，是定值嗎？xy：10、20、30、40，是定值嗎？',
+      answer: '不成比例',
+      explanation: 'y 是定值 10，但 y÷x 不是定值，xy 也不是定值。所以 y 與 x 不成比例。'
+    }
+  ];
+  
+  // ========== 隨機抽 10 題 ==========
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  
+  let questions = [];
+  let currentIdx = 0;
+  let correctCount = 0;
+  let answered = false;
+  
+  function pickQuestions() {
+    // 從題庫中分類抽題，確保題型平衡
+    const proportional = questionBank.filter(q => q.answer === '正比');
+    const inverse = questionBank.filter(q => q.answer === '反比');
+    const none = questionBank.filter(q => q.answer === '不成比例');
+    
+    // 抽 4 正比、3 反比、3 不成比例（共 10 題）
+    const picked = [
+      ...shuffle(proportional).slice(0, 4),
+      ...shuffle(inverse).slice(0, 3),
+      ...shuffle(none).slice(0, 3)
+    ];
+    
+    return shuffle(picked);
+  }
+  
+  function init() {
+    questions = pickQuestions();
+    currentIdx = 0;
+    correctCount = 0;
+    answered = false;
+    document.getElementById('totalNum').innerText = questions.length;
+    renderQuestion();
+  }
+  
+  function renderQuestion() {
+    answered = false;
+    const q = questions[currentIdx];
+    const area = document.getElementById('quizArea');
+    
+    // 表格 HTML
+    let tableHTML = '';
+    if (q.table) {
+      tableHTML = '<div class="table-wrapper"><table class="data-table"><tr>';
+      q.table[0].forEach((cell, i) => {
+        tableHTML += i === 0 ? `<th>${cell}</th>` : `<td>${cell}</td>`;
+      });
+      tableHTML += '</tr><tr>';
+      q.table[1].forEach((cell, i) => {
+        tableHTML += i === 0 ? `<th>${cell}</th>` : `<td>${cell}</td>`;
+      });
+      tableHTML += '</tr></table></div>';
+    }
+    
+    area.innerHTML = `
+      <div class="question-card">
+        <div class="question-header">
+          <span class="question-number">案件 ${currentIdx + 1}</span>
+          <span class="question-type">類型：${q.type}</span>
+        </div>
+        <div class="question-text">${q.text}</div>
+        ${tableHTML}
+        
+        <div class="hint-section">
+          <button class="hint-btn" onclick="toggleHint()">💡 需要提示嗎？</button>
+          <div class="hint-content" id="hintContent">${q.hint}</div>
+        </div>
+        
+        <div class="options" id="options">
+          <button class="option-btn" data-ans="正比" onclick="selectAnswer('正比')">📈 正比</button>
+          <button class="option-btn" data-ans="反比" onclick="selectAnswer('反比')">🌀 反比</button>
+          <button class="option-btn" data-ans="不成比例" onclick="selectAnswer('不成比例')">❌ 不成比例</button>
+        </div>
+        
+        <div class="detective-note" id="detectiveNote">
+          <div class="note-title">🔍 偵探筆記</div>
+          <div id="noteContent"></div>
+        </div>
+        
+        <button class="next-btn" id="nextBtn" onclick="nextQuestion()">
+          ${currentIdx === questions.length - 1 ? '📋 查看調查報告' : '下一題 →'}
+        </button>
+      </div>
+    `;
+    
+    updateStats();
+  }
+  
+  function toggleHint() {
+    document.getElementById('hintContent').classList.toggle('show');
+  }
+  
+  function selectAnswer(choice) {
+    if (answered) return;
+    answered = true;
+    
+    const q = questions[currentIdx];
+    const buttons = document.querySelectorAll('.option-btn');
+    
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      const ans = btn.dataset.ans;
+      if (ans === q.answer) {
+        btn.classList.add('correct');
+      } else if (ans === choice) {
+        btn.classList.add('wrong');
+      } else {
+        btn.classList.add('fade');
+      }
+    });
+    
+    if (choice === q.answer) {
+      correctCount++;
+    }
+    
+    // 顯示偵探筆記
+    const note = document.getElementById('detectiveNote');
+    const noteContent = document.getElementById('noteContent');
+    let noteHTML = '';
+    
+    if (choice === q.answer) {
+      noteHTML = `<div style="color:#155724; font-weight:bold; margin-bottom:8px;">✅ 答對！</div>`;
+    } else {
+      noteHTML = `<div style="color:#721c24; font-weight:bold; margin-bottom:8px;">❌ 你選了「${choice}」，正解是「${q.answer}」</div>`;
+    }
+    noteHTML += `<div>${q.explanation}</div>`;
+    
+    noteContent.innerHTML = noteHTML;
+    note.classList.add('show');
+    
+    document.getElementById('nextBtn').classList.add('show');
+    updateStats();
+  }
+  
+  function nextQuestion() {
+    if (currentIdx < questions.length - 1) {
+      currentIdx++;
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      showResult();
+    }
+  }
+  
+  function updateStats() {
+    document.getElementById('currentNum').innerText = currentIdx + 1;
+    document.getElementById('correctNum').innerText = correctCount;
+    const progress = ((currentIdx + (answered ? 1 : 0)) / questions.length) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+  }
+  
+  function showResult() {
+    document.getElementById('quizArea').style.display = 'none';
+    document.querySelector('.stats-bar').style.display = 'none';
+    
+    const screen = document.getElementById('resultScreen');
+    screen.classList.add('show');
+    document.getElementById('finalScore').innerText = correctCount;
+    
+    let rank = '';
+    if (correctCount === 10) rank = '🏆 完美偵探！所有案件全部破解！';
+    else if (correctCount >= 8) rank = '🥇 資深偵探！表現非常優異';
+    else if (correctCount >= 6) rank = '🥈 見習偵探！還需多加磨練';
+    else if (correctCount >= 4) rank = '🥉 偵探學徒！再多練習就能進步';
+    else rank = '📖 新手上路！再仔細看看判斷法則';
+    
+    document.getElementById('resultRank').innerText = rank;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  
+  function restart() {
+    document.getElementById('resultScreen').classList.remove('show');
+    document.getElementById('quizArea').style.display = 'block';
+    document.querySelector('.stats-bar').style.display = 'flex';
+    init();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  
+  // 初始化
+  init();
+</script>
+</body>
+</html>
