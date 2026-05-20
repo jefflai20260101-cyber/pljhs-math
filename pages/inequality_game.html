@@ -1,0 +1,270 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:transparent;color:var(--color-text-primary)}
+@keyframes pop{0%{transform:scale(0.85);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes floatup{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-48px) scale(1.3)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes streak-pop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+
+#app{padding:0.75rem 0 1.5rem;max-width:660px}
+
+/* ── HEADER ── */
+#hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem}
+#game-title{font-size:17px;font-weight:500;display:flex;align-items:center;gap:8px}
+#game-title i{font-size:20px;color:#1D9E75}
+#hud{display:flex;gap:8px}
+.hud-pill{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);font-size:13px;font-weight:500;position:relative;overflow:visible}
+.hud-pill i{font-size:15px}
+#pill-score i{color:#1D9E75}
+#pill-streak i{color:#EF9F27}
+#streak-label{transition:color 0.2s}
+#streak-label.hot{color:#EF9F27;animation:streak-pop 0.3s ease}
+
+/* ── PROGRESS ── */
+#prog-wrap{margin-bottom:1rem}
+#prog-info{display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-secondary);margin-bottom:5px}
+#prog-track{height:8px;background:var(--color-background-secondary);border-radius:99px;overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+#prog-fill{height:100%;background:linear-gradient(90deg,#1D9E75,#5DCAA5);border-radius:99px;transition:width 0.5s cubic-bezier(.4,0,.2,1)}
+
+/* ── QUESTION CARD ── */
+#q-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1rem;animation:pop 0.25s ease;position:relative;overflow:hidden}
+#q-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1D9E75,#5DCAA5);border-radius:16px 16px 0 0}
+#cat-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;margin-bottom:0.75rem}
+#cat-badge.type-a{background:#E1F5EE;color:#0F6E56}
+#cat-badge.type-b{background:#E6F1FB;color:#185FA5}
+#q-num{font-size:11px;color:var(--color-text-secondary);float:right;margin-bottom:0.75rem}
+#q-text{font-size:15px;line-height:1.75;color:var(--color-text-primary);clear:both}
+
+/* ── OPTIONS ── */
+#opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.opt{background:var(--color-background-primary);border:1.5px solid var(--color-border-secondary);border-radius:12px;padding:0.85rem 0.75rem;font-size:16px;font-weight:500;cursor:pointer;text-align:center;transition:transform 0.1s,border-color 0.15s,background 0.15s;color:var(--color-text-primary);letter-spacing:0.3px;position:relative}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:#1D9E75;background:var(--color-background-secondary)}
+.opt:active:not(:disabled){transform:scale(0.96)}
+.opt.correct{background:#EAF3DE;border-color:#3B6D11;color:#27500A;animation:pop 0.2s ease}
+.opt.wrong{background:#FCEBEB;border-color:#A32D2D;color:#791F1F;animation:shake 0.35s ease}
+.opt:disabled{cursor:default;transform:none}
+.opt .opt-letter{position:absolute;top:6px;left:10px;font-size:10px;color:var(--color-text-secondary);font-weight:400}
+
+/* ── FEEDBACK ── */
+#feedback{border-radius:12px;padding:0.9rem 1.1rem;margin-bottom:0.9rem;display:none;animation:pop 0.2s ease;font-size:13.5px;line-height:1.65}
+#feedback.show{display:block}
+#feedback.fb-ok{background:#EAF3DE;border:1px solid #97C459;color:#27500A}
+#feedback.fb-bad{background:#FCEBEB;border:1px solid #F09595;color:#791F1F}
+#fb-head{font-weight:500;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+#fb-hint{opacity:0.9}
+
+/* ── NEXT BUTTON ── */
+#next-btn{width:100%;padding:0.8rem;border-radius:12px;border:none;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;font-size:15px;font-weight:500;cursor:pointer;display:none;transition:opacity 0.15s,transform 0.1s;letter-spacing:0.3px}
+#next-btn:hover{opacity:0.9}
+#next-btn:active{transform:scale(0.98)}
+
+/* ── FLOAT POINTS ── */
+.float-pts{position:fixed;font-size:18px;font-weight:500;pointer-events:none;animation:floatup 0.8s ease forwards;z-index:999}
+
+/* ── RESULT ── */
+#result-screen{display:none;text-align:center;padding:1.5rem 0.5rem}
+#res-trophy{font-size:56px;margin-bottom:0.75rem;animation:pulse 1.5s ease infinite}
+#res-title{font-size:22px;font-weight:500;margin-bottom:0.5rem}
+#res-desc{font-size:14px;color:var(--color-text-secondary);margin-bottom:1.5rem;line-height:1.7;white-space:pre-line}
+#res-cards{display:flex;gap:10px;justify-content:center;margin-bottom:1.5rem}
+.rc{background:var(--color-background-secondary);border-radius:12px;padding:0.85rem 1.5rem;text-align:center;border:0.5px solid var(--color-border-tertiary)}
+.rc-num{font-size:26px;font-weight:500}
+.rc-label{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.rc.rc-hi .rc-num{color:#1D9E75}
+#res-rank{display:inline-block;font-size:12px;font-weight:500;padding:4px 16px;border-radius:99px;margin-bottom:1.25rem}
+#restart-btn{padding:0.75rem 2.5rem;border-radius:12px;border:none;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:opacity 0.15s}
+#restart-btn:hover{opacity:0.88}
+</style>
+
+<h2 class="sr-only">文字翻譯官：一元一次不等式生活用語配對消除遊戲</h2>
+<div id="app">
+
+<div id="hdr">
+  <div id="game-title"><i class="ti ti-math-symbols" aria-hidden="true"></i>文字翻譯官</div>
+  <div id="hud">
+    <div class="hud-pill" id="pill-score"><i class="ti ti-star-filled" aria-hidden="true"></i><span id="score-val">0</span>&thinsp;分</div>
+    <div class="hud-pill" id="pill-streak"><i class="ti ti-flame" aria-hidden="true"></i><span id="streak-label">0</span>&thinsp;連勝</div>
+  </div>
+</div>
+
+<div id="prog-wrap">
+  <div id="prog-info"><span id="prog-text">第 1 題 / 共 10 題</span><span id="prog-pct">0%</span></div>
+  <div id="prog-track"><div id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<div id="game-area">
+  <div id="q-card">
+    <span id="q-num"></span>
+    <div id="cat-badge"></div>
+    <div id="q-text"></div>
+  </div>
+  <div id="opts"></div>
+  <div id="feedback"><div id="fb-head"></div><div id="fb-hint"></div></div>
+  <button id="next-btn">繼續下一題 →</button>
+</div>
+
+<div id="result-screen">
+  <div id="res-trophy"></div>
+  <div id="res-rank"></div>
+  <div id="res-title"></div>
+  <div id="res-desc"></div>
+  <div id="res-cards">
+    <div class="rc rc-hi"><div class="rc-num" id="r-correct"></div><div class="rc-label">得分</div></div>
+    <div class="rc"><div class="rc-num" id="r-total"></div><div class="rc-label">滿分</div></div>
+    <div class="rc"><div class="rc-num" id="r-pct"></div><div class="rc-label">正確率</div></div>
+    <div class="rc"><div class="rc-num" id="r-best"></div><div class="rc-label">最高連勝</div></div>
+  </div>
+  <button id="restart-btn">🔄&ensp;再挑戰一次</button>
+</div>
+
+</div>
+
+<script>
+const ALL_QS=[
+  {id:1,cat:"生活用語翻譯",text:"宜華的分數（a 分）不比阿志的 90 分低",correct:"a >= 90",opts:["a > 90","a >= 90","a < 90","a <= 90"],hint:"「不比他低」包含剛好相等的情況，要有等號！"},
+  {id:2,cat:"生活用語翻譯",text:"（4x－3）小於 12",correct:"4x-3 < 12",opts:["4x-3 < 12","4x-3 <= 12","4x-3 > 12","4x-3 >= 12"],hint:"「小於」嚴格比較，不含等於！≤ 是「不大於」，兩者不同！"},
+  {id:3,cat:"生活用語翻譯",text:"（2x＋1）不大於 7",correct:"2x+1 <= 7",opts:["2x+1 < 7","2x+1 <= 7","2x+1 > 7","2x+1 >= 7"],hint:"「不大於」＝小於或等於，等於 7 也是合法的！"},
+  {id:4,cat:"生活用語翻譯",text:"（4－3x）大於 2x",correct:"4-3x > 2x",opts:["4-3x > 2x","4-3x >= 2x","4-3x < 2x","4-3x <= 2x"],hint:"「大於」嚴格比較，不含等於！別跟「不小於（≥）」混淆！"},
+  {id:5,cat:"生活用語翻譯",text:"（5x－1）不小於（x＋3）",correct:"5x-1 >= x+3",opts:["5x-1 > x+3","5x-1 >= x+3","5x-1 < x+3","5x-1 <= x+3"],hint:"「不小於」＝大於或等於，兩邊相等也算！"},
+  {id:6,cat:"生活用語翻譯",text:"申請工讀需「滿 18 歲」但「未滿 40 歲」（年齡為 x 歲）",correct:"18 <= x < 40",opts:["18 < x < 40","18 <= x < 40","18 <= x <= 40","18 < x <= 40"],hint:"「滿 18」含 18 → ≤；「未滿 40」不含 40 → <，兩端各自判斷！"},
+  {id:7,cat:"生活情境列式",text:"遊樂園規定身高 140 公分「以上（含）」才可搭乘，小明身高 x 公分",correct:"x >= 140",opts:["x > 140","x >= 140","x < 140","x <= 140"],hint:"「以上（含）」包含 140 本身，用 ≥ 不是 >！"},
+  {id:8,cat:"生活情境列式",text:"兒童區規定身高「未滿 100 公分」才能入場，小玉身高 x 公分",correct:"x < 100",opts:["x < 100","x <= 100","x > 100","x >= 100"],hint:"「未滿」不含本身，剛好 100 公分就不能進去！"},
+  {id:9,cat:"生活情境列式",text:"阿華買了 8 顆奇異果，結帳時總金額「超過」100 元，每顆 x 元",correct:"8x > 100",opts:["8x > 100","8x >= 100","8x < 100","8x <= 100"],hint:"「超過 100 元」嚴格大於，剛好 100 元不叫超過！"},
+  {id:10,cat:"生活情境列式",text:"小貨車「總重量不得超過」3500 公斤，自重 2600 公斤，每臺電視 32 公斤，運 x 臺",correct:"2600+32x <= 3500",opts:["2600+32x < 3500","2600+32x <= 3500","2600+32x > 3500","32x <= 3500"],hint:"「不得超過」含剛好等於 3500 的情況，用 ≤！"},
+  {id:11,cat:"生活情境列式",text:"手機定價 x 元，打 9 折後再折抵 500 元，預算「不超過」6000 元",correct:"0.9x-500 <= 6000",opts:["0.9x-500 < 6000","0.9x-500 <= 6000","0.9x+500 <= 6000","0.9x-500 >= 6000"],hint:"「不超過」含等於 6000，用 ≤！"},
+  {id:12,cat:"生活情境列式",text:"國道速限「最高 110、最低 60（含）」公里，行車速度 x 公里",correct:"60 <= x <= 110",opts:["60 < x < 110","60 <= x < 110","60 <= x <= 110","60 < x <= 110"],hint:"最高最低都是「含」，兩端都用 ≤！"},
+  {id:13,cat:"生活情境列式",text:"划船去程每分鐘 60 公尺、回程 50 公尺，來回各 x 公尺，全程「未滿 60 分鐘」",correct:"x/60+x/50 < 60",opts:["x/60+x/50 < 60","x/60+x/50 <= 60","x/50+x/60 > 60","x/60-x/50 < 60"],hint:"「未滿 60 分鐘」嚴格小於，不含等於！"},
+  {id:14,cat:"生活情境列式",text:"兩件單價 x 元的衣服打 7 折再折抵 100 元，花費「不到 1000 元」",correct:"2x*0.7-100 < 1000",opts:["2x*0.7-100 < 1000","2x*0.7-100 <= 1000","2x*0.7+100 < 1000","2x*0.7 < 1000"],hint:"「不到」＝「未滿」，不含剛好 1000 元，用 <！"},
+  {id:15,cat:"生活情境列式",text:"甲箱書重 36 公斤，比乙箱（x 公斤）3 倍「還重」",correct:"36 > 3x",opts:["36 > 3x","36 >= 3x","36 < 3x","3x > 36"],hint:"「還重」是嚴格大於，不含相等！"},
+  {id:16,cat:"生活用語翻譯",text:"今天氣溫（t 度）「至少」比昨天（25 度）高 3 度",correct:"t >= 28",opts:["t > 28","t >= 28","t >= 25","t > 25"],hint:"「至少高 3 度」含剛好高 3 度，t ≥ 25+3=28！"},
+  {id:17,cat:"生活情境列式",text:"存款 1200 元，每週存 250 元，需「至少」存到 3999 元才能買單車，存 x 週",correct:"1200+250x >= 3999",opts:["250x >= 3999","1200+250x > 3999","1200+250x >= 3999","250x >= 2799"],hint:"「至少 3999」含剛好等於 3999，用 ≥！"},
+  {id:18,cat:"生活用語翻譯",text:"宿舍熄燈後噪音（d 分貝）「不得高於」40 分貝",correct:"d <= 40",opts:["d < 40","d <= 40","d > 40","d >= 40"],hint:"「不得高於 40」含 40 分貝本身，用 ≤！"},
+  {id:19,cat:"生活情境列式",text:"兩個單價 x 元的馬克杯先折價 50 元再打 7 折，實付金額「超過 500 元」",correct:"(2x-50)*0.7 > 500",opts:["(2x-50)*0.7 > 500","(2x-50)*0.7 >= 500","2x*0.7-50 > 500","(2x+50)*0.7 > 500"],hint:"「超過」嚴格大於，不含等於！先折價再打折，順序不能換！"},
+  {id:20,cat:"生活情境列式",text:"挑戰組規定成績（x 秒）需「超過 200 秒」且「不超過 300 秒」",correct:"200 < x <= 300",opts:["200 < x <= 300","200 <= x <= 300","200 < x < 300","200 <= x < 300"],hint:"「超過 200」不含 200（用 <），「不超過 300」含 300（用 ≤）！"}
+];
+
+const GAME_SIZE=10;
+let qs,cur,score,streak,bestStreak,answered,pts;
+
+function shuffle(a){return[...a].sort(()=>Math.random()-0.5)}
+
+function start(){
+  qs=shuffle(ALL_QS).slice(0,GAME_SIZE);
+  cur=0;score=0;streak=0;bestStreak=0;
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('game-area').style.display='block';
+  updateHUD();render();
+}
+
+function updateHUD(){
+  document.getElementById('score-val').textContent=score;
+  const sl=document.getElementById('streak-label');
+  sl.textContent=streak;
+  sl.className=streak>=3?'hot':'';
+  const pct=Math.round(cur/GAME_SIZE*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-text').textContent=`第 ${Math.min(cur+1,GAME_SIZE)} 題 / 共 ${GAME_SIZE} 題`;
+  document.getElementById('prog-pct').textContent=pct+'%';
+}
+
+const LETTERS=['A','B','C','D'];
+function render(){
+  if(cur>=GAME_SIZE){showResult();return;}
+  answered=false;
+  const q=qs[cur];
+  document.getElementById('q-num').textContent=`Q${cur+1}`;
+  const badge=document.getElementById('cat-badge');
+  badge.textContent=q.cat;
+  badge.className=q.cat==='生活用語翻譯'?'type-a':'type-b';
+  document.getElementById('q-text').textContent=q.text;
+  const fb=document.getElementById('feedback');
+  fb.className='';fb.style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  const shuffled=shuffle(q.opts);
+  const container=document.getElementById('opts');
+  container.innerHTML='';
+  shuffled.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';
+    btn.innerHTML=`<span class="opt-letter">${LETTERS[i]}</span>${opt}`;
+    btn.dataset.val=opt;
+    btn.onclick=()=>choose(btn,opt,q);
+    container.appendChild(btn);
+  });
+  document.getElementById('q-card').style.animation='none';
+  requestAnimationFrame(()=>{document.getElementById('q-card').style.animation='pop 0.25s ease';});
+}
+
+function choose(btn,chosen,q){
+  if(answered)return;
+  answered=true;
+  const allBtns=document.querySelectorAll('.opt');
+  allBtns.forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.val===q.correct)b.classList.add('correct');
+  });
+  const fb=document.getElementById('feedback');
+  const ok=chosen===q.correct;
+  if(ok){
+    btn.classList.add('correct');
+    const gain=streak>=2?15:10;
+    score=Math.min(100,score+gain);streak++;
+    if(streak>bestStreak)bestStreak=streak;
+    fb.className='show fb-ok';
+    document.getElementById('fb-head').innerHTML=streak>=3?`<i class="ti ti-flame"></i> ${streak} 連勝！+${gain} 分`:`<i class="ti ti-check"></i> 答對！+${gain} 分`;
+    document.getElementById('fb-hint').textContent='完全正確！你已掌握這個不等號的意義。';
+    spawnFloat(btn,`+${gain}`,'#1D9E75');
+  } else {
+    btn.classList.add('wrong');
+    streak=0;
+    fb.className='show fb-bad';
+    document.getElementById('fb-head').innerHTML=`<i class="ti ti-x"></i> 答錯了！正確答案是「${q.correct}」`;
+    document.getElementById('fb-hint').textContent='📌 '+q.hint;
+    spawnFloat(btn,'✗','#E24B4A');
+  }
+  updateHUD();
+  document.getElementById('next-btn').style.display='block';
+}
+
+function spawnFloat(btn,text,color){
+  const r=btn.getBoundingClientRect();
+  const el=document.createElement('div');
+  el.className='float-pts';
+  el.textContent=text;
+  el.style.cssText=`left:${r.left+r.width/2-20}px;top:${r.top-10}px;color:${color}`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+
+document.getElementById('next-btn').onclick=()=>{cur++;updateHUD();render();};
+document.getElementById('restart-btn').onclick=start;
+
+function showResult(){
+  document.getElementById('game-area').style.display='none';
+  const rs=document.getElementById('result-screen');
+  rs.style.display='block';
+  const pct=Math.round(score/(GAME_SIZE*20)*100);
+  const correct=GAME_SIZE-(document.querySelectorAll('.opt.wrong').length);
+  const correctCount=qs.slice(0,cur).reduce((n,q,i)=>n,0);
+  document.getElementById('r-correct').textContent=score+'分';
+  document.getElementById('r-total').textContent='100分';
+  document.getElementById('r-pct').textContent=score+'%';
+  document.getElementById('r-best').textContent=bestStreak;
+  let trophy,rank,title,desc,rankStyle;
+  if(score>=90){trophy='🏆';rank='S 級翻譯官';rankStyle='background:#FAEEDA;color:#633806';title='滿分神人！';desc='不等號的每一個細節都難不倒你！\n你是真正的「文字翻譯官」！';}
+  else if(score>=75){trophy='🥇';rank='A 級翻譯官';rankStyle='background:#E1F5EE;color:#085041';title='非常優秀！';desc='大部分不等號都正確了！\n再注意「含等號 / 不含等號」的細節就完美！';}
+  else if(score>=90){trophy='🥈';rank='B 級翻譯官';rankStyle='background:#E6F1FB;color:#0C447C';title='表現不錯！';desc='「超過」和「不超過」的邊界再多練習一下，\n很快就能升到 A 級！';}
+  else{trophy='📖';rank='C 級學員';rankStyle='background:#F1EFE8;color:#444441';title='繼續加油！';desc='建議回顧課本 P.117 用語對照表，\n搞懂含等號 vs 不含等號，再來衝高分！';}
+  document.getElementById('res-trophy').textContent=trophy;
+  const rankEl=document.getElementById('res-rank');
+  rankEl.textContent=rank;rankEl.style.cssText=rankStyle+';padding:4px 18px;border-radius:99px';
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-desc').textContent=desc;
+  document.getElementById('prog-fill').style.width='100%';
+  document.getElementById('prog-text').textContent='完成！';
+  document.getElementById('prog-pct').textContent='100%';
+}
+
+start();
+</script>
