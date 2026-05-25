@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>不等式練習</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',sans-serif;background:#f5f4f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 14px}
+h1{font-size:20px;font-weight:500;color:#111;margin-bottom:3px;text-align:center}
+.sub{font-size:13px;color:#888;margin-bottom:18px;text-align:center}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.13);border-radius:12px;padding:20px;width:100%;max-width:680px;margin-bottom:12px}
+
+/* 關卡選擇 */
+.stage-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+.stage-btn{border:1.5px solid rgba(0,0,0,0.18);border-radius:10px;padding:20px 16px;cursor:pointer;background:#fff;transition:all .15s;text-align:left}
+.stage-btn:hover{border-color:#185FA5;background:#E6F1FB}
+.stage-icon{font-size:28px;margin-bottom:8px}
+.stage-title{font-size:15px;font-weight:500;color:#111;margin-bottom:4px}
+.stage-desc{font-size:12px;color:#888;line-height:1.5}
+.stage-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;margin-top:6px;font-weight:500}
+.badge-b{background:#E6F1FB;color:#185FA5}
+.badge-a{background:#EAF3DE;color:#3B6D11}
+
+/* 通用 quiz UI */
+.score-bar{display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.score-chip{background:#EAF3DE;color:#3B6D11;border-radius:8px;padding:5px 14px;font-size:13px;font-weight:500}
+.prog{font-size:13px;color:#888}
+.qbox{background:#f8f7f4;border:0.5px solid rgba(0,0,0,0.1);border-radius:8px;padding:14px;text-align:center;margin-bottom:16px}
+.qlabel{font-size:11px;color:#999;letter-spacing:.5px;margin-bottom:5px}
+.qtext{font-size:21px;font-weight:500;color:#111}
+button.prim{flex:1;padding:9px 18px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;min-width:80px}
+button.prim:hover{background:#0C447C}
+button.sec{padding:9px 16px;background:#fff;color:#666;border:0.5px solid rgba(0,0,0,0.22);border-radius:8px;font-size:14px;cursor:pointer}
+button.sec:hover{background:#f5f4f0}
+.btnrow{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.fb{margin-top:12px;padding:11px 14px;border-radius:8px;font-size:14px;font-weight:500;display:none}
+.fb.ok{background:#EAF3DE;color:#3B6D11;border:0.5px solid #97C459}
+.fb.err{background:#FCEBEB;color:#A32D2D;border:0.5px solid #F09595}
+
+/* 關卡一：數線繪圖 */
+.tools{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.tlabel{font-size:13px;color:#666;white-space:nowrap}
+.tbtn{display:flex;align-items:center;gap:7px;padding:7px 12px;border:1.5px solid rgba(0,0,0,0.22);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;color:#111;transition:all .12s}
+.tbtn:hover{background:#f5f4f0}
+.tbtn.active{border-color:#3B6D11;background:#EAF3DE;color:#3B6D11}
+.dot-s{width:15px;height:15px;border-radius:50%;flex-shrink:0}
+.filled-d{background:#185FA5}
+.hollow-d{background:#fff;border:2.5px solid #185FA5}
+canvas#nl{display:block;width:100%;touch-action:none;cursor:crosshair}
+.hint{font-size:12px;color:#999;text-align:center;margin-top:7px}
+
+/* 關卡二：寫不等式 */
+.nl-wrap{margin-bottom:14px}
+canvas#nlQ{display:block;width:100%}
+.ans-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ans-label{font-size:14px;color:#555}
+.ans-input{font-size:18px;border:1.5px solid rgba(0,0,0,0.22);border-radius:8px;padding:7px 12px;width:220px;outline:none;font-family:inherit}
+.ans-input:focus{border-color:#185FA5}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.choice{border:1.5px solid rgba(0,0,0,0.18);border-radius:8px;padding:10px 14px;cursor:pointer;background:#fff;font-size:16px;text-align:center;transition:all .12s}
+.choice:hover{border-color:#185FA5;background:#E6F1FB}
+.choice.sel{border-color:#185FA5;background:#185FA5;color:#fff}
+.choice.right{border-color:#3B6D11;background:#EAF3DE;color:#3B6D11}
+.choice.wrong{border-color:#A32D2D;background:#FCEBEB;color:#A32D2D}
+
+/* 結果畫面 */
+.finish{text-align:center;padding:10px 0}
+.big-score{font-size:52px;font-weight:500;color:#185FA5}
+.score-sub{font-size:15px;color:#888;margin-top:2px}
+.detail{font-size:13px;color:#555;margin-top:12px;line-height:1.9;text-align:left}
+.tag-ok{color:#3B6D11}
+.tag-err{color:#A32D2D}
+.back-btn{margin-top:16px;display:inline-block;padding:9px 28px;background:#fff;color:#185FA5;border:1.5px solid #185FA5;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500}
+.back-btn:hover{background:#E6F1FB}
+</style>
+</head>
+<body>
+<h1>一元一次不等式練習</h1>
+<p class="sub">七年級數學・每次 10 題・滿分 100 分</p>
+
+<!-- 關卡選擇 -->
+<div class="card" id="homeCard">
+  <div style="font-size:14px;color:#555;margin-bottom:12px">請選擇練習關卡：</div>
+  <div class="stage-grid">
+    <div class="stage-btn" onclick="startStage(1)">
+      <div class="stage-icon">✏️</div>
+      <div class="stage-title">關卡一</div>
+      <div class="stage-desc">看不等式，在數線上畫出解的範圍（實心／空心圓 + 方向）</div>
+      <span class="stage-badge badge-b">數線繪圖</span>
+    </div>
+    <div class="stage-btn" onclick="startStage(2)">
+      <div class="stage-icon">🔍</div>
+      <div class="stage-title">關卡二</div>
+      <div class="stage-desc">看數線圖示，從四個選項中選出正確的不等式</div>
+      <span class="stage-badge badge-a">由圖寫式</span>
+    </div>
+  </div>
+</div>
+
+<!-- 關卡一 -->
+<div class="card" id="s1Card" style="display:none">
+  <div class="score-bar">
+    <span class="score-chip" id="s1Chip">得分：0 分</span>
+    <span class="prog" id="s1Prog">第 1 題 / 共 10 題</span>
+  </div>
+  <div class="qbox">
+    <div class="qlabel">請在數線上畫出下列不等式的解</div>
+    <div class="qtext" id="s1Q">—</div>
+  </div>
+  <div class="tools">
+    <span class="tlabel">工具：</span>
+    <button class="tbtn active" id="btnF" onclick="setTool('filled')"><span class="dot-s filled-d"></span>實心圓（包含）</button>
+    <button class="tbtn" id="btnH" onclick="setTool('hollow')"><span class="dot-s hollow-d"></span>空心圓（不包含）</button>
+  </div>
+  <canvas id="nl" height="95"></canvas>
+  <p class="hint">點擊放置圓點，再拖曳決定範圍方向或另一端點</p>
+  <div class="btnrow">
+    <button class="prim" onclick="s1Submit()">提交解答</button>
+    <button class="sec" onclick="s1Reset()">重新作答</button>
+    <button class="sec" onclick="goHome()">返回選單</button>
+  </div>
+  <div class="fb" id="s1Fb"></div>
+</div>
+
+<!-- 關卡二 -->
+<div class="card" id="s2Card" style="display:none">
+  <div class="score-bar">
+    <span class="score-chip" id="s2Chip">得分：0 分</span>
+    <span class="prog" id="s2Prog">第 1 題 / 共 10 題</span>
+  </div>
+  <div class="qbox">
+    <div class="qlabel">下列數線圖示代表哪個不等式？</div>
+    <div class="qtext" style="font-size:14px;color:#888">請從下方選項中選出正確答案</div>
+  </div>
+  <div class="nl-wrap">
+    <canvas id="nlQ" height="85"></canvas>
+  </div>
+  <div class="choices" id="choicesBox"></div>
+  <div class="btnrow">
+    <button class="sec" onclick="goHome()">返回選單</button>
+  </div>
+  <div class="fb" id="s2Fb"></div>
+</div>
+
+<!-- 結果 -->
+<div class="card finish" id="resultCard" style="display:none">
+  <div style="font-size:13px;color:#888;margin-bottom:4px" id="resultStageLabel"></div>
+  <div class="big-score" id="finalScore">0</div>
+  <div class="score-sub">/ 100 分</div>
+  <div class="detail" id="detailList"></div>
+  <div class="btnrow" style="justify-content:center;margin-top:16px">
+    <button class="prim" style="flex:unset;padding:10px 28px" onclick="restartCurrent()">再練一次</button>
+    <button class="back-btn" onclick="goHome()">返回選單</button>
+  </div>
+</div>
+
+<script>
+/* ===================== BANK ===================== */
+const BANK=[
+  {text:'x > 3',type:'single',bound:3,dir:'right',inc:false},
+  {text:'x ≤ 5',type:'single',bound:5,dir:'left',inc:true},
+  {text:'x > 0',type:'single',bound:0,dir:'right',inc:false},
+  {text:'0 ≤ x',type:'single',bound:0,dir:'right',inc:true},
+  {text:'x < 4',type:'single',bound:4,dir:'left',inc:false},
+  {text:'-2 ≥ x',type:'single',bound:-2,dir:'left',inc:true},
+  {text:'x > -3',type:'single',bound:-3,dir:'right',inc:false},
+  {text:'x ≥ 2',type:'single',bound:2,dir:'right',inc:true},
+  {text:'x < -1',type:'single',bound:-1,dir:'left',inc:false},
+  {text:'x ≤ -1',type:'single',bound:-1,dir:'left',inc:true},
+  {text:'x ≥ -2',type:'single',bound:-2,dir:'right',inc:true},
+  {text:'x < 0',type:'single',bound:0,dir:'left',inc:false},
+  {text:'x ≤ 3',type:'single',bound:3,dir:'left',inc:true},
+  {text:'x > -2',type:'single',bound:-2,dir:'right',inc:false},
+  {text:'-3 < x ≤ 3',type:'range',lo:-3,hi:3,loInc:false,hiInc:true},
+  {text:'-2 ≤ x < 5',type:'range',lo:-2,hi:5,loInc:true,hiInc:false},
+  {text:'-1 < x ≤ 2',type:'range',lo:-1,hi:2,loInc:false,hiInc:true},
+  {text:'-3 ≤ x < -1',type:'range',lo:-3,hi:-1,loInc:true,hiInc:false},
+  {text:'-2 < x < 0',type:'range',lo:-2,hi:0,loInc:false,hiInc:false},
+  {text:'-3 < x < 2',type:'range',lo:-3,hi:2,loInc:false,hiInc:false},
+  {text:'-3 ≤ x ≤ 1',type:'range',lo:-3,hi:1,loInc:true,hiInc:true},
+  {text:'-2 < x ≤ 2',type:'range',lo:-2,hi:2,loInc:false,hiInc:true},
+  {text:'-5 ≤ x < 3',type:'range',lo:-5,hi:3,loInc:true,hiInc:false},
+  {text:'0 ≤ x ≤ 2',type:'range',lo:0,hi:2,loInc:true,hiInc:true},
+  {text:'-2 ≤ x < 4',type:'range',lo:-2,hi:4,loInc:true,hiInc:false},
+];
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+let currentStage=0;
+
+function goHome(){
+  ['s1Card','s2Card','resultCard'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('homeCard').style.display='block';
+}
+
+function startStage(n){
+  currentStage=n;
+  document.getElementById('homeCard').style.display='none';
+  if(n===1)initS1();
+  else initS2();
+}
+
+function restartCurrent(){
+  document.getElementById('resultCard').style.display='none';
+  startStage(currentStage);
+}
+
+function showResult(score,results,stageLabel){
+  ['s1Card','s2Card'].forEach(id=>document.getElementById(id).style.display='none');
+  const rc=document.getElementById('resultCard');
+  rc.style.display='block';
+  document.getElementById('resultStageLabel').textContent=stageLabel;
+  document.getElementById('finalScore').textContent=score;
+  let html='<b>作答明細：</b><br>';
+  results.forEach((r,i)=>{
+    html+=`<span class="${r.ok?'tag-ok':'tag-err'}">${r.ok?'✓':'✗'}</span> 第${i+1}題：${r.text}<br>`;
+  });
+  document.getElementById('detailList').innerHTML=html;
+}
+
+/* ===================== 關卡一 ===================== */
+const PAD=46,YL=50,TK=7,DR=9;
+let W1,sc1,tool='filled',placed=[],dragging=false,dragEndX=null;
+let s1sess=[],s1idx=0,s1score=0,s1results=[];
+
+function initS1(){
+  s1sess=shuffle(BANK).slice(0,10);s1idx=0;s1score=0;s1results=[];
+  document.getElementById('s1Card').style.display='block';
+  resizeS1();loadS1();updateS1UI();
+}
+function resizeS1(){
+  const cvs=document.getElementById('nl');
+  W1=cvs.parentElement.clientWidth;
+  cvs.width=W1;cvs.style.width=W1+'px';
+  sc1=(W1-PAD*2)/10;drawS1();
+}
+window.addEventListener('resize',()=>{if(W1)resizeS1();if(W2)resizeS2();});
+
+function toX1(v){return PAD+(v+5)*sc1;}
+function toV1(cx){return Math.round((cx-PAD)/sc1*4)/4-5;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function setTool(t){tool=t;document.getElementById('btnF').classList.toggle('active',t==='filled');document.getElementById('btnH').classList.toggle('active',t==='hollow');}
+
+function drawS1(){
+  if(!W1)return;
+  const cvs=document.getElementById('nl'),ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,W1,95);
+  const y=YL;
+  drawAxis(ctx,W1,y,sc1,PAD,TK);
+  if(placed.length>0){
+    const d=placed[0],cx=toX1(d.value);
+    if(d.end!==null){
+      ctx.strokeStyle='#185FA5';ctx.lineWidth=3;
+      if(d.dir==='right'){
+        ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(W1-PAD+6,y);ctx.stroke();
+        arrowHead(ctx,W1-PAD+14,y,'right');
+      }else if(d.dir==='left'){
+        ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(PAD-6,y);ctx.stroke();
+        arrowHead(ctx,PAD-14,y,'left');
+      }else{
+        ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(toX1(d.end2),y);ctx.stroke();
+        dot1(ctx,toX1(d.end2),y,d.endInc);
+      }
+    }
+    dot1(ctx,cx,y,d.inc);
+  }
+  if(placed.length>0&&placed[0].end===null&&dragEndX!==null){
+    const ctx2=document.getElementById('nl').getContext('2d');
+    ctx2.strokeStyle='rgba(24,95,165,0.3)';ctx2.lineWidth=3;
+    ctx2.beginPath();ctx2.moveTo(toX1(placed[0].value),y);ctx2.lineTo(dragEndX,y);ctx2.stroke();
+  }
+}
+function dot1(ctx,x,y,filled){
+  ctx.beginPath();ctx.arc(x,y,DR,0,Math.PI*2);
+  if(filled){ctx.fillStyle='#185FA5';ctx.fill();}
+  else{ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#185FA5';ctx.lineWidth=2.5;ctx.stroke();}
+}
+
+const nl=document.getElementById('nl');
+nl.addEventListener('pointerdown',e=>{
+  const r=nl.getBoundingClientRect(),cx=e.clientX-r.left,v=clamp(toV1(cx),-5,5);
+  if(placed.length===0){placed=[{value:v,inc:tool==='filled',end:null,dir:null}];dragging=true;drawS1();return;}
+  if(placed[0].end===null)dragging=true;
+});
+nl.addEventListener('pointermove',e=>{
+  if(!dragging)return;dragEndX=e.clientX-nl.getBoundingClientRect().left;drawS1();
+});
+nl.addEventListener('pointerup',e=>{
+  if(!dragging)return;dragging=false;
+  const r=nl.getBoundingClientRect(),ex=e.clientX-r.left,dv=clamp(toV1(ex),-5,5),d=placed[0],dx=ex-toX1(d.value);
+  if(Math.abs(dx)<8){dragEndX=null;drawS1();return;}
+  const q=s1sess[s1idx];
+  if(q.type==='single'){d.dir=dx>0?'right':'left';d.end=dx>0?5:-5;}
+  else{
+    d.dir='range';
+    if(d.value<=dv){d.end2=dv;d.endInc=tool==='filled';}
+    else{d.end2=d.value;d.endInc=d.inc;d.value=dv;d.inc=tool==='filled';}
+    d.end='range';
+  }
+  dragEndX=null;drawS1();
+});
+
+function s1Reset(){placed=[];dragging=false;dragEndX=null;document.getElementById('s1Fb').style.display='none';drawS1();}
+
+function s1Submit(){
+  const fb=document.getElementById('s1Fb');
+  if(placed.length===0||placed[0].end===null){fb.className='fb err';fb.style.display='block';fb.textContent='請先在數線上放置圓點並拖曳出範圍。';return;}
+  const d=placed[0],q=s1sess[s1idx];
+  let ok=false;
+  if(q.type==='single')ok=Math.abs(d.value-q.bound)<0.4&&d.inc===q.inc&&d.dir===q.dir;
+  else{const loOk=Math.abs(d.value-q.lo)<0.4&&d.inc===q.loInc;const hiOk=d.end==='range'&&Math.abs(d.end2-q.hi)<0.4&&d.endInc===q.hiInc;ok=loOk&&hiOk;}
+  s1results.push({text:q.text,ok});if(ok)s1score+=10;
+  fb.className='fb '+(ok?'ok':'err');fb.style.display='block';
+  fb.textContent=ok?'✓ 正確！':'✗ 有誤：請確認實心／空心圓與範圍方向。';
+  updateS1UI();
+  setTimeout(()=>{s1idx++;if(s1idx>=10){showResult(s1score,s1results,'關卡一・數線繪圖');return;}loadS1();},1300);
+}
+function updateS1UI(){document.getElementById('s1Chip').textContent='得分：'+s1score+' 分';document.getElementById('s1Prog').textContent='第 '+(s1idx+1)+' 題 / 共 10 題';}
+function loadS1(){s1Reset();document.getElementById('s1Q').textContent=s1sess[s1idx].text;document.getElementById('s1Prog').textContent='第 '+(s1idx+1)+' 題 / 共 10 題';}
+
+/* ===================== 關卡二 ===================== */
+let W2,sc2;
+let s2sess=[],s2idx=0,s2score=0,s2results=[],s2answered=false;
+
+function initS2(){
+  s2sess=shuffle(BANK).slice(0,10);s2idx=0;s2score=0;s2results=[];
+  document.getElementById('s2Card').style.display='block';
+  resizeS2();loadS2();updateS2UI();
+}
+function resizeS2(){
+  const cvs=document.getElementById('nlQ');
+  W2=cvs.parentElement.clientWidth;
+  cvs.width=W2;cvs.style.width=W2+'px';
+  drawS2Q();
+}
+
+function toX2(v){return PAD+(v+5)*sc2;}
+
+function drawS2Q(){
+  if(!W2)return;
+  const cvs=document.getElementById('nlQ'),ctx=cvs.getContext('2d');
+  sc2=(W2-PAD*2)/10;
+  ctx.clearRect(0,0,W2,85);
+  const y=44;
+  drawAxis(ctx,W2,y,sc2,PAD,TK);
+  if(!s2sess||s2idx>=s2sess.length)return;
+  const q=s2sess[s2idx];
+  ctx.strokeStyle='#185FA5';ctx.lineWidth=3;
+  if(q.type==='single'){
+    const cx=toX2(q.bound);
+    if(q.dir==='right'){
+      ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(W2-PAD+6,y);ctx.stroke();
+      arrowHead(ctx,W2-PAD+14,y,'right');
+    }else{
+      ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(PAD-6,y);ctx.stroke();
+      arrowHead(ctx,PAD-14,y,'left');
+    }
+    dot1(ctx,cx,y,q.inc);
+  }else{
+    const lx=toX2(q.lo),hx=toX2(q.hi);
+    ctx.beginPath();ctx.moveTo(lx,y);ctx.lineTo(hx,y);ctx.stroke();
+    dot1(ctx,lx,y,q.loInc);
+    dot1(ctx,hx,y,q.hiInc);
+  }
+}
+
+function makeDistractors(q){
+  const pool=[];
+  if(q.type==='single'){
+    const b=q.bound,dir=q.dir,inc=q.inc;
+    const flipInc=!inc,flipDir=dir==='right'?'left':'right';
+    const nb=b===0?1:b===5?4:b===-5?-4:b+(Math.random()>0.5?1:-1);
+    pool.push(makeText({type:'single',bound:b,dir:dir,inc:flipInc}));
+    pool.push(makeText({type:'single',bound:b,dir:flipDir,inc:inc}));
+    pool.push(makeText({type:'single',bound:nb,dir:dir,inc:inc}));
+    pool.push(makeText({type:'single',bound:flipDir==='right'?b:b,dir:flipDir,inc:flipInc}));
+  }else{
+    const {lo,hi,loInc,hiInc}=q;
+    const off=lo>-4?-1:1;
+    pool.push(makeText({type:'range',lo,hi,loInc:!loInc,hiInc}));
+    pool.push(makeText({type:'range',lo,hi,loInc,hiInc:!hiInc}));
+    pool.push(makeText({type:'range',lo:lo+off,hi,loInc,hiInc}));
+    pool.push(makeText({type:'range',lo,hi:hi+(hi<4?1:-1),loInc,hiInc}));
+  }
+  const seen=new Set([q.text]);
+  const dist=[];
+  for(const t of pool){if(!seen.has(t)){seen.add(t);dist.push(t);if(dist.length===3)break;}}
+  while(dist.length<3)dist.push(dist[0]==='?'?'無解':'?');
+  return dist;
+}
+
+function makeText(q){
+  if(q.type==='single'){
+    const s=q.inc?(q.dir==='right'?'≥':'≤'):(q.dir==='right'?'>':'<');
+    if(q.dir==='right')return'x '+s+' '+q.bound;
+    return q.bound+' '+flip(s)+' x';
+  }else{
+    const ls=q.loInc?'≤':'<',rs=q.hiInc?'≤':'<';
+    return q.lo+' '+ls+' x '+rs+' '+q.hi;
+  }
+}
+function flip(s){return s==='≥'?'≤':s==='≤'?'≥':s==='>'?'<':'>';}
+
+function loadS2(){
+  s2answered=false;
+  document.getElementById('s2Fb').style.display='none';
+  drawS2Q();
+  const q=s2sess[s2idx];
+  const dist=makeDistractors(q);
+  const opts=shuffle([q.text,...dist]);
+  const box=document.getElementById('choicesBox');
+  box.innerHTML='';
+  opts.forEach(opt=>{
+    const d=document.createElement('div');
+    d.className='choice';d.textContent=opt;
+    d.onclick=()=>s2Pick(opt,q.text,d);
+    box.appendChild(d);
+  });
+  updateS2UI();
+}
+
+function s2Pick(chosen,correct,el){
+  if(s2answered)return;s2answered=true;
+  const ok=chosen===correct;
+  s2results.push({text:correct,ok});if(ok)s2score+=10;
+  document.querySelectorAll('.choice').forEach(c=>{
+    if(c.textContent===correct)c.classList.add('right');
+    else if(c===el&&!ok)c.classList.add('wrong');
+  });
+  const fb=document.getElementById('s2Fb');
+  fb.className='fb '+(ok?'ok':'err');fb.style.display='block';
+  fb.textContent=ok?'✓ 正確！':'✗ 有誤，正確答案是：'+correct;
+  updateS2UI();
+  setTimeout(()=>{s2idx++;if(s2idx>=10){showResult(s2score,s2results,'關卡二・由圖寫式');return;}loadS2();},1400);
+}
+function updateS2UI(){document.getElementById('s2Chip').textContent='得分：'+s2score+' 分';document.getElementById('s2Prog').textContent='第 '+(s2idx+1)+' 題 / 共 10 題';}
+
+/* ===================== 共用繪圖工具 ===================== */
+function drawAxis(ctx,W,y,sc,pad,tk){
+  ctx.strokeStyle='#185FA5';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(pad-10,y);ctx.lineTo(W-pad+10,y);ctx.stroke();
+  ctx.fillStyle='#185FA5';
+  ctx.beginPath();ctx.moveTo(W-pad+14,y);ctx.lineTo(W-pad+6,y-5);ctx.lineTo(W-pad+6,y+5);ctx.fill();
+  ctx.lineWidth=1.5;
+  for(let v=-5;v<=5;v++){
+    const x=pad+(v+5)*sc;
+    ctx.strokeStyle='#185FA5';ctx.beginPath();ctx.moveTo(x,y-tk);ctx.lineTo(x,y+tk);ctx.stroke();
+    ctx.fillStyle='#333';ctx.font='12px sans-serif';ctx.textAlign='center';
+    ctx.fillText(v,x,y+20);
+  }
+}
+function arrowHead(ctx,x,y,dir){
+  ctx.fillStyle='#185FA5';
+  ctx.beginPath();
+  if(dir==='right'){ctx.moveTo(x,y);ctx.lineTo(x-8,y-5);ctx.lineTo(x-8,y+5);}
+  else{ctx.moveTo(x,y);ctx.lineTo(x+8,y-5);ctx.lineTo(x+8,y+5);}
+  ctx.fill();
+}
+
+/* 初始化 */
+resizeS1();
+</script>
+</body>
+</html>
